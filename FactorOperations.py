@@ -73,15 +73,16 @@ def SetValueOfAssignment( F, A, v, Vorder=None):
 %
 %   F = SetValueOfAssignment(F, A, v, VO) sets the value of a variable
 %   assignment, A, in factor F to v. The order of the variables in A are given
-%   by the vector VO. """
+%   by the vector VO. See https://github.com/indapa/PGM/blob/master/Prog1/SetValueOfAssignment.m  """
 
-    factorVars=F.getVar()
+    
 
     if Vorder == None:
         indx=AssignmentToIndex( A, F.getCard() )
     else:
         sys.stderr.write("assumes the order of variables in A are the sayme as in F.var ...\n")
         pass
+
     #http://stackoverflow.com/a/5183720, How to make List from Numpy Matrix in Python
     #http://stackoverflow.com/a/8373103, numpy function to set elements of array to a value given a list of indices
     indices=np.array(indx-1).flatten().tolist()
@@ -89,3 +90,21 @@ def SetValueOfAssignment( F, A, v, Vorder=None):
     zeros[indices]=v
     F.setVal( zeros.tolist() )
 
+def GetValueOfAssignment( F, A, Vorder = None ):
+    """ % GetValueOfAssignment Gets the value of a variable assignment in a factor.
+%
+%   v = GetValueOfAssignment(F, A) returns the value of a variable assignment,
+%   A, in factor F. The order of the variables in A are assumed to be the
+%   same as the order in F.var.
+%
+%   v = GetValueOfAssignment(F, A, VO) gets the value of a variable assignment,
+%   A, in factor F. The order of the variables in A are given by the vector VO. See https://github.com/indapa/PGM/blob/master/Prog1/GetValueOfAssignment.m """
+
+    if Vorder  == None:
+        indx= AssignmentToIndex ( A, F.getCard() )
+    else:
+        sys.stderr.write("The order of the variables in A are assumed to be the same as the order in F var\n")
+        pass
+
+    indices=np.array(indx-1).flatten().tolist()
+    return np.array ( np.matrix ( F.getVal()[indices] ))
