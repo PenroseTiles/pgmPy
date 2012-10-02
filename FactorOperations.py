@@ -3,6 +3,16 @@ from Factor import *
 import numpy as np
 import sys
 
+def isMember( A, B):
+    """ return a python list containing  indices in B where the elements of A are located
+        A and B are np 1-d arrays
+        mapA[i]=j if and only if B[i] == A[j]"""
+    mapA=[]
+    for i in range(len(A)):
+        mapA.append( np.where(B==A[i])[0].tolist()[0] )
+        
+    return mapA
+
 def IndexToAssignment( I, D):
 
     """ given and index I (a row vector representing the indices of values a factor object's val field
@@ -108,3 +118,66 @@ def GetValueOfAssignment( F, A, Vorder = None ):
 
     indices=np.array(indx-1).flatten().tolist()
     return np.array ( np.matrix ( F.getVal()[indices] ))
+
+def FactorProduct ( A, B):
+    """ FactorProduct Computes the product of two factors.
+%       C = FactorProduct(A,B) computes the product between two factors, A and B,
+%       where each factor is defined over a set of variables with given dimension.
+%       The factor data structure has the following fields:
+%       .var    Vector of variables in the factor, e.g. [1 2 3]
+%       .card   Vector of cardinalities corresponding to .var, e.g. [2 2 2]
+%       .val    Value table of size prod(.card)
+%
+%       See also FactorMarginalization  IndexToAssignment,
+%       AssignmentToIndex, and https://github.com/indapa/PGM/blob/master/Prog1/FactorProduct.m """
+
+    C=Factor()
+
+   #check for empty factors
+    if len( A.getVar() ) == 0 :
+        sys.stderr.write("A factor is empty!\n")
+        return B
+    if len( B.getVar() ) == 0:
+        sys.stderr.write("B factor is empty!\n")
+        return A
+
+
+    #check of  variables that in both A and B have the same cardinality
+    setA= set( A.getVar() )
+    setB= set( B.getVar() )
+    intersect=np.array( list( setA.intersection(setB)))
+
+    #if the intersection of variables in the two factors
+    #is non-zero, then make sure they have the same cardinality
+    if len(intersect) > 0:
+        iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
+        iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
+
+        # check to see if any of the comparisons in the  array resulting from  of a.getCard()[iA] == b.getCard()[iB] 
+        # are all False. If so print an error and exit
+        if len( np.where( A.getCard()[iA] == B.getCard()[iB] ==False)[0].tolist() ) > 0:
+            sys.stderr.write("dimensionality mismatch in factors!\n")
+            sys.exit(1)
+
+    #now set the variables of C to the union of variables in factors A and B
+    C.setVar ( list( setA.union(setB) ) )
+    mapA=isMember(A.getVar(), C.getVar() )
+    mapB=isMember(B.getVar(), C.getVar() )
+
+    #Set the cardinality of variables in C
+    C.setCard( np.zeros( len(C.getVar())).tolist() )
+    C.getCard()[mapA]=A.getCard()
+    C.getCard()[mapB]=B.getCard()
+
+    #intitialize the values of the factor C to be zero
+    C.setVal( np.zeros(np.prod(C.getCard())).tolist() )
+
+    #some helper indices to tell what indices of A and B values to multiply
+    assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() )
+    indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1
+    indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1
+    
+    c_val=A.getVal()[indxA.flatten().tolist()] * B.getVal()[indxB.flatten().tolist()]
+    C.setVal ( c_val.tolist() )
+
+    return C
