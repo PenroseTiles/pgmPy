@@ -36,7 +36,7 @@ def AssignmentToIndex ( A, D):
     (nrowA,ncolA)=np.shape(A)
 
     if nrowA== 1 or ncolA ==1: #if assginments are 1 row or 1 col
-        sys.stderr.write("if block ...\n")
+        #sys.stderr.write("if block ...\n")
         b=tmp=list( D[:-1] )
         tmp.insert(0,1)
         
@@ -62,3 +62,30 @@ def AssignmentToIndex ( A, D):
 
        
     return np.array( np.matrix( I ).transpose()  )
+
+
+def SetValueOfAssignment( F, A, v, Vorder=None):
+    """ % SetValueOfAssignment Sets the value of a variable assignment in a factor.
+%
+%   F = SetValueOfAssignment(F, A, v) sets the value of a variable assignment,
+%   A, in factor F to v. The order of the variables in A are assumed to be the
+%   same as the order in F.var.
+%
+%   F = SetValueOfAssignment(F, A, v, VO) sets the value of a variable
+%   assignment, A, in factor F to v. The order of the variables in A are given
+%   by the vector VO. """
+
+    factorVars=F.getVar()
+
+    if Vorder == None:
+        indx=AssignmentToIndex( A, F.getCard() )
+    else:
+        sys.stderr.write("assumes the order of variables in A are the sayme as in F.var ...\n")
+        pass
+    #http://stackoverflow.com/a/5183720, How to make List from Numpy Matrix in Python
+    #http://stackoverflow.com/a/8373103, numpy function to set elements of array to a value given a list of indices
+    indices=np.array(indx-1).flatten().tolist()
+    zeros=np.zeros(len(A))
+    zeros[indices]=v
+    F.setVal( zeros.tolist() )
+
