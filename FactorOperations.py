@@ -5,7 +5,7 @@ import sys
 
 def isMember( A, B):
     """ return a python list containing  indices in B where the elements of A are located
-        A and B are np 1-d arrays
+        A and B are numpy 1-d arrays
         mapA[i]=j if and only if B[i] == A[j]"""
     mapA=[]
     for i in range(len(A)):
@@ -181,3 +181,48 @@ def FactorProduct ( A, B):
     C.setVal ( c_val.tolist() )
 
     return C
+
+def FactorMarginalization(A,V):
+    """   FactorMarginalization Sums given variables out of a factor.
+          B = FactorMarginalization(A,V) computes the factor with the variables
+          in V summed out. The factor data structure has the following fields:
+          .var    Vector of variables in the factor, e.g. [1 2 3]
+          .card   Vector of cardinalities corresponding to .var, e.g. [2 2 2]
+          .val    Value table of size prod(.card)
+
+          The resultant factor should have at least one variable remaining or this
+          function will throw an error.   See also FactorProduct, IndexToAssignment , and AssignmentToIndex
+          Based on matlab code found here: https://github.com/indapa/PGM/blob/master/Prog1/FactorMarginalization.m """
+
+    #the resulting factor after marginalizing out variables in python list V that are in 
+    #the factor A
+    B=Factor()
+
+    #check for empy factor or variable list
+    if len( A.getVar() ) == 0 or len(V) == 0:
+        return A
+
+    #construct the variables of the marginalized factor by 
+    #computing the set difference between A.var and V
+    #These variables in the difference set will be the scope of the new factor
+    setA=set( A.getVar() )
+    setV=set(V)
+    Bvar=np.array( list( setA.difference(setV)))
+    mapB=isMember(Bvar, A.getVar()) #indices of the variables of the new factor in the original factor A
+    print mapB,  Bvar
+
+    #check to see if the new factor has empty scope
+    if len(Bvar) == 0:
+        sys.stderr.write("FactorMarginalization:Error, resultant factor has empty scope...\n")
+        return None
+    #set the marginalized factor's variable scope and cardinality
+    B.setVar( Bvar.tolist() )
+    B.setCard( A.getCard()[mapB] )
+    B.setVal( np.zeros(np.prod(B.getCard())).tolist() )
+
+    #compute some helper indices
+    assignments=IndexToAssignment ( np.arange(np.prod(A.getCard()) ), A.getCard() )
+    indxB=AssignmentToIndex( assignments[:,mapB], B.getCard())-1
+
+
+    return B
