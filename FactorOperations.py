@@ -279,3 +279,31 @@ def ObserveEvidence (INPUTS, EVIDENCE):
             if len(zeroIndices) == len (factor.getVal() ):
                 sys.stderr.write("All variable values are zero, which is not possible.\n")
             
+
+def ComputeJointDistribution(INPUTS):
+    """ ComputeJointDistribution Computes the joint distribution defined by a set of given factors
+
+    Joint = ComputeJointDistribution(INPUTS) computes the joint distribution
+    defined by a set of given factors
+
+    Joint is a factor that encapsulates the joint distribution given by INPUTS
+    INPUTS is a vector of Factor objects containing the factors defining the distribution
+
+    """
+
+    totalFactors = len(INPUTS)
+    #check for empty list of INPUTS
+
+    if totalFactors== 0:
+        sys.stderr.write("Empty factor list given as input\n")
+        return Factor( [], [], [] )
+  #if totalFactors ==2:
+  #    return FactorProduct ( INPUTS[0], INPUTS[1] )
+    else:
+        # see http://docs.python.org/library/functions.html#reduce for description of Python reduce function
+        return reduce(lambda x, y: FactorProduct(x,y), INPUTS)
+
+
+
+
+
