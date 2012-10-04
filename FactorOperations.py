@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 from Factor import *
 import numpy as np
+from PGMcommon import *
 import sys
 
-def isMember( A, B):
-    """ return a python list containing  indices in B where the elements of A are located
-        A and B are numpy 1-d arrays
-        mapA[i]=j if and only if B[i] == A[j]"""
-    mapA=[]
-    for i in range(len(A)):
-        mapA.append( np.where(B==A[i])[0].tolist()[0] )
-        
-    return mapA
+
 
 def IndexToAssignment( I, D):
 
@@ -222,7 +215,16 @@ def FactorMarginalization(A,V):
 
     #compute some helper indices
     assignments=IndexToAssignment ( np.arange(np.prod(A.getCard()) ), A.getCard() )
+    #indxB tells which values in A to sum together when marginalizing out the variable(s) in B
     indxB=AssignmentToIndex( assignments[:,mapB], B.getCard())-1
 
-
+    #accum is a numpy implementation of matlab accumarray
+    #accumarray sums data in each group
+    #here the group(s) are defined in indxB
+    #indxB is a map to tell which value in A.val to map the sum to
+    #see http://blogs.mathworks.com/loren/2008/02/20/under-appreciated-accumarray/
+    marginal_vals=accum(indxB, A.getVal() )
+    
+    #set the marginal values to the new factor with teh variable(s) in V summed(marginalized) out
+    B.setVal( marginal_vals.tolist() )
     return B
