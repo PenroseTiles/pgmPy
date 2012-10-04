@@ -254,12 +254,28 @@ def ObserveEvidence (INPUTS, EVIDENCE):
             continue
 
         for factor in INPUTS:
-        #the following returns a list
-        indx=np.where( factor.getVar() == variable )[0].tolist()
-        if indx: #if the indx is not empty, it contains the index value  of the evidence variable in factor.val array
-            indx=indx[0]
-            indx=indx[0] #assign indx to be the actually value
+            #the following returns a list
+            indx=np.where( factor.getVar() == variable )[0].tolist()
+            if indx: #if the indx is not empty, it contains the index value  of the evidence variable in factor.val array
+                indx=indx[0]
+                
             if value > factor.getCard()[indx] or value < 0:
                 sys.stderr.write("invalid evidene for variable X_'" + str(variable) + " = " + str(value) + "\n")
                 sys.exit(1)
+
+            #get the assignments of variables for the factor
+            assignments=IndexToAssignment( np.arange(np.prod( factor.getCard() )), factor.getCard() )
+            # now get the indices in  the assignments that don't agree with the observed  value (evidence)
+            mask=np.where( assignments[:,indx] != value )[0].tolist()
+            #we are going to update the val array for the current factor
+            newvals=factor.getVal()
+            #set the mask indices to zero and reset the val array of the factor
+            newvals[mask]=0
+            factor.setVal( newvals.tolist() )
+
+            #now check to see the validity of the updated values of the factor
+            #given the observed evidence. We cannot have all zero values for the factor!
+            zeroIndices=np.where ( factor.getVal() == 0)[0].tolist()
+            if len(zeroIndices) == len (factor.getVal() ):
+                sys.stderr.write("All variable values are zero, which is not possible.\n")
             
