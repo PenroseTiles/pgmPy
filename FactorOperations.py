@@ -228,3 +228,38 @@ def FactorMarginalization(A,V):
     #set the marginal values to the new factor with teh variable(s) in V summed(marginalized) out
     B.setVal( marginal_vals.tolist() )
     return B
+
+
+
+def ObserveEvidence (INPUTS, EVIDENCE):
+
+    """   ObserveEvidence Modify a vector of factors given some evidence.
+          F = ObserveEvidence(INPUTS, EVIDENCE) sets all entries in the vector of factors,INPUTS,
+          that are not consistent with the evidence, E, to zero. F is a vector of
+          factors, each a data structure with the following fields:
+          .var    Vector of variables in the factor, e.g. [1 2 3]
+          .card   Vector of cardinalities corresponding to .var, e.g. [2 2 2]
+          .val    Value table of size prod(.card)
+          EVIDENCE is an N-by-2 matrix, where each row consists of a variable/value pair.
+          Variables are in the first column and values are in the second column.   """
+    (nrows, ncols)=np.shape(EVIDENCE)
+    #total_factors=len(INPUTS)
+    #iterate through evidence
+    for i in range(nrows):
+        variable=EVIDENCE[i,0]
+        value=EVIDENCE[i,1]
+        #print 'var: ', variable, 'value: ', value
+        if int(value) == 0:
+            print "Evidence is not set for variable: ', variable, ' in evidence matrix.\n"
+            continue
+
+        for factor in INPUTS:
+        #the following returns a list
+        indx=np.where( factor.getVar() == variable )[0].tolist()
+        if indx: #if the indx is not empty, it contains the index value  of the evidence variable in factor.val array
+            indx=indx[0]
+            indx=indx[0] #assign indx to be the actually value
+            if value > factor.getCard()[indx] or value < 0:
+                sys.stderr.write("invalid evidene for variable X_'" + str(variable) + " = " + str(value) + "\n")
+                sys.exit(1)
+            
