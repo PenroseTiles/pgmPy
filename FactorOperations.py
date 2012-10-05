@@ -202,7 +202,7 @@ def FactorMarginalization(A,V):
     setV=set(V)
     Bvar=np.array( list( setA.difference(setV)))
     mapB=isMember(Bvar, A.getVar()) #indices of the variables of the new factor in the original factor A
-    print mapB,  Bvar
+    #print mapB,  Bvar
 
     #check to see if the new factor has empty scope
     if len(Bvar) == 0:
@@ -278,7 +278,7 @@ def ObserveEvidence (INPUTS, EVIDENCE):
             zeroIndices=np.where ( factor.getVal() == 0)[0].tolist()
             if len(zeroIndices) == len (factor.getVal() ):
                 sys.stderr.write("All variable values are zero, which is not possible.\n")
-            
+    return INPUTS
 
 def ComputeJointDistribution(INPUTS):
     """ ComputeJointDistribution Computes the joint distribution defined by a set of given factors
@@ -297,11 +297,66 @@ def ComputeJointDistribution(INPUTS):
     if totalFactors== 0:
         sys.stderr.write("Empty factor list given as input\n")
         return Factor( [], [], [] )
-  #if totalFactors ==2:
-  #    return FactorProduct ( INPUTS[0], INPUTS[1] )
+ 
     else:
         # see http://docs.python.org/library/functions.html#reduce for description of Python reduce function
         return reduce(lambda x, y: FactorProduct(x,y), INPUTS)
+
+
+def ComputeMarginal(V, F, E):
+    """
+        ComputeMarginal Computes the marginal over a set of given variables
+        M = ComputeMarginal(V, F, E) computes the marginal over variables V
+        in the distribution induced by the set of factors F, given evidence E
+
+        M is a factor containing the marginal over variables V
+
+        V is a vector containing the variables in the marginal e.g. [1 2 3] for X_1, X_2 and X_3.
+        i.e. a result of FactorMarginalization
+
+        F is a vector of factors (struct array) containing the factors
+        defining the distribution
+
+        E is an N-by-2 matrix, each row being a variable/value pair.
+        Variables are in the first column and values are in the second column.
+        If there is no evidence, pass in the empty matrix [] for E.
+
+    """
+    totalFactors=len(F)
+    #reshape a 1d array to 1xncol array
+    #since ObserveEvidence requires Nx2 array, we reshape to a 2 column array
+    #see http://stackoverflow.com/a/12576163 for reshaping 1d array to 2d array
+    EVIDENCE= np.reshape( np.array ( E ), (-1,2) )
+    #print np.shape(EVIDENCE)
+    
+    if totalFactors == 0:
+        sys.stderr.write("empty factor list given as input.\n")
+        return Factor( [], [], [])
+    # union of all variables in list of factors F
+    variableList=[] # a list of of lists, where each element is a list containing the variables of the factor in F
+    for factor in F:
+        var=factor.getVar().tolist()
+        variableList.append( var )
+
+    #get the union of variables across all the factor in F
+    #see this http://stackoverflow.com/a/2151553, Pythonic Way to Create Union of All Values Contained in Multiple Lists
+    union_variables = set().union(*variableList)
+    #print union_variables
+    #v contains the variables not in the list of variables in the marginal
+    v=list( union_variables.difference(V) )
+   
+    # compute the joint distribution, but then reduce it, given the evidence
+    jointE= ObserveEvidence ( [ComputeJointDistribution ( F )], EVIDENCE )[0]
+
+    #now we need to re-normaize the joint, since observe evidence doesn't do it for us
+    jointE_normalizedVal = jointE.getVal()/np.sum( jointE.getVal() )
+    jointE.setVal( jointE_normalizedVal.tolist() )
+
+    return FactorMarginalization ( jointE, v)
+    
+
+
+
 
 
 
