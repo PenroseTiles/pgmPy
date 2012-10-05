@@ -323,7 +323,7 @@ def ComputeMarginal(V, F, E):
 
     """
     totalFactors=len(F)
-    #reshape a 1d array to 1xncol array
+    #reshape a 1d array to 1x ncol array
     #since ObserveEvidence requires Nx2 array, we reshape to a 2 column array
     #see http://stackoverflow.com/a/12576163 for reshaping 1d array to 2d array
     EVIDENCE= np.reshape( np.array ( E ), (-1,2) )
@@ -346,6 +346,9 @@ def ComputeMarginal(V, F, E):
     v=list( union_variables.difference(V) )
    
     # compute the joint distribution, but then reduce it, given the evidence
+    # ComputeJointDistribution returns a factor, but ObserveEvidence expects a list
+    # of factors as the first argument, so hence the need for brackets [ ]
+    # ObserveEvidence returns a list, but we want the first element so thats why the [0]
     jointE= ObserveEvidence ( [ComputeJointDistribution ( F )], EVIDENCE )[0]
 
     #now we need to re-normaize the joint, since observe evidence doesn't do it for us
