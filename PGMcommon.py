@@ -121,3 +121,24 @@ def accum(accmap, a, func=None, size=None, fill_value=0, dtype=None):
             out[s] = func(vals[s])
 
     return out
+
+
+
+def getIndex ( V, I):
+    """ this method finds for every element of 1d- NumPy array, the index in another 1d-NumPy array
+        based off of this StackOverflow answer http://stackoverflow.com/a/8251757/1735942
+        V is a numpy 1d array listing the variables of a factor in a PGM
+        I is the numpy list reprsenting the intersection of variables between two factors
+
+        This method returns the index of the intersection variables in the list V 
+        """
+    index=np.argsort(V) #np.argsort gives the index ordering of an array that would result in sorted order
+                        #http://docs.scipy.org/doc/numpy/reference/generated/numpy.argsort.html
+    sorted_v=V[index]   #sorted version of V array
+    sorted_index=np.searchsorted( sorted_v, I) #i ndices where elements of I  would be inserted into sorted_v to maintain order
+                                               #http://docs.scipy.org/doc/numpy/reference/generated/numpy.searchsorted.html
+    vindex=np.take(index, sorted_index, mode='clip') #Take elements from an array along an axis.\
+                                                     #http://docs.scipy.org/doc/numpy/reference/generated/numpy.take.html
+    #print vindex
+    return vindex.tolist()
+
