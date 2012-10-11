@@ -152,10 +152,10 @@ def FactorProduct ( A, B):
     if len(intersect) > 0:
         #iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
         iA=getIndex( A.getVar(), intersect )
-        print "iA: ", iA
+        #print "iA: ", iA
         #iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
         iB = getIndex (  B.getVar(), intersect )
-        print "iB: ", iB
+        #print "iB: ", iB
 
         # check to see if any of the comparisons in the  array resulting from  of a.getCard()[iA] == b.getCard()[iB] 
         # are all False. If so print an error and exit
