@@ -124,6 +124,9 @@ def FactorProduct ( A, B):
 %       See also FactorMarginalization  IndexToAssignment,
 %       AssignmentToIndex, and https://github.com/indapa/PGM/blob/master/Prog1/FactorProduct.m """
 
+    #print "A: ", A
+    #print "===="
+    #print "B: ", B
     C=Factor()
 
    #check for empty factors
@@ -140,15 +143,23 @@ def FactorProduct ( A, B):
     setB= set( B.getVar() )
     intersect=np.array( list( setA.intersection(setB)))
 
+    #print "Intersection of variables in FactorProduct ", intersect
+    #print "A var: ",  A.getVar()
+    #print "B var: ",  B.getVar()
+
     #if the intersection of variables in the two factors
     #is non-zero, then make sure they have the same cardinality
     if len(intersect) > 0:
-        iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
-        iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
+        #iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
+        iA=getIndex( A.getVar(), intersect )
+        print "iA: ", iA
+        #iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
+        iB = getIndex (  B.getVar(), intersect )
+        print "iB: ", iB
 
         # check to see if any of the comparisons in the  array resulting from  of a.getCard()[iA] == b.getCard()[iB] 
         # are all False. If so print an error and exit
-        if len( np.where( A.getCard()[iA] == B.getCard()[iB] ==False)[0].tolist() ) > 0:
+        if len( np.where( A.getCard()[iA].all() == B.getCard()[iB].all() ==False)[0].tolist() ) > 0:
             sys.stderr.write("dimensionality mismatch in factors!\n")
             sys.exit(1)
 
@@ -323,7 +334,7 @@ def ComputeMarginal(V, F, E):
 
     """
     totalFactors=len(F)
-    #reshape a 1d array to 1x ncol array
+    #reshape a 1d array to 1 x ncol array
     #since ObserveEvidence requires Nx2 array, we reshape to a 2 column array
     #see http://stackoverflow.com/a/12576163 for reshaping 1d array to 2d array
     EVIDENCE= np.reshape( np.array ( E ), (-1,2) )
