@@ -1,22 +1,11 @@
 net
 {
-	propagationenginegenerator1791944048146838126L = "edu.ucla.belief.approx.BeliefPropagationSettings@51da6868";
-	huginenginegenerator3061656038650325130L = "edu.ucla.belief.inference.JoinTreeSettings@59fcadd3";
-	recoveryenginegenerator6944530267470113528l = "edu.ucla.util.SettingsImpl@5bf825cc";
-	node_size = (130 55);
+	propagationenginegenerator1791944048146838126L = "edu.ucla.belief.approx.BeliefPropagationSettings@67ee75a5";
+	huginenginegenerator3061656038650325130L = "edu.ucla.belief.inference.JoinTreeSettings@586dd8f1";
+	recoveryenginegenerator6944530267470113528l = "edu.ucla.util.SettingsImpl@13bde392";
+	node_size = (130.0 55.0);
 }
 
-node Difficulty
-{
-	states = ("easy" "hard" );
-	position = (15 -4);
-	excludepolicy = "include whole CPT";
-	ismapvariable = "false";
-	ID = "variable0";
-	label = "D";
-	DSLxSUBMODEL = "Root Submodel";
-	diagnosistype = "AUXILIARY";
-}
 node G
 {
 	states = ("Honors" "Pass" "Fail" );
@@ -26,6 +15,7 @@ node G
 	ID = "variable2";
 	label = "Grade";
 	DSLxSUBMODEL = "Root Submodel";
+	DSLxEXTRA_DEFINITIONxDIAGNOSIS_TYPE = "AUXILIARY";
 	diagnosistype = "AUXILIARY";
 }
 node S
@@ -37,33 +27,44 @@ node S
 	ID = "variable3";
 	label = "SAT";
 	DSLxSUBMODEL = "Root Submodel";
+	DSLxEXTRA_DEFINITIONxDIAGNOSIS_TYPE = "AUXILIARY";
 	diagnosistype = "AUXILIARY";
 }
 node L
 {
 	states = ("weak" "strong" );
-	position = (155 -261);
+	position = (156 -260);
 	excludepolicy = "include whole CPT";
 	ismapvariable = "false";
 	ID = "variable4";
 	label = "Letter";
 	DSLxSUBMODEL = "Root Submodel";
+	DSLxEXTRA_DEFINITIONxDIAGNOSIS_TYPE = "AUXILIARY";
 	diagnosistype = "AUXILIARY";
 }
 node I
 {
 	states = ("normal" "gifted" );
-	position = (260 -4);
+	position = (261 -3);
 	excludepolicy = "include whole CPT";
 	ismapvariable = "false";
 	ID = "variable1";
 	label = "Intelligence";
 	DSLxSUBMODEL = "Root Submodel";
+	DSLxEXTRA_DEFINITIONxDIAGNOSIS_TYPE = "AUXILIARY";
 	diagnosistype = "AUXILIARY";
 }
-potential ( Difficulty | )
+node Difficulty
 {
-	data = (	0.5	0.5	);
+	states = ("easy" "hard" );
+	position = (14 -4);
+	excludepolicy = "include whole CPT";
+	ismapvariable = "false";
+	ID = "variable0";
+	label = "D";
+	DSLxSUBMODEL = "Root Submodel";
+	DSLxEXTRA_DEFINITIONxDIAGNOSIS_TYPE = "AUXILIARY";
+	diagnosistype = "AUXILIARY";
 }
 potential ( G | Difficulty I )
 {
@@ -84,6 +85,10 @@ potential ( L | G )
 		(	0.99	0.01	));
 }
 potential ( I | )
+{
+	data = (	0.7	0.3	);
+}
+potential ( Difficulty | )
 {
 	data = (	0.5	0.5	);
 }
