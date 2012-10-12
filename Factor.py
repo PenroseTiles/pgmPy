@@ -13,7 +13,7 @@ class Factor(object):
         varstring= " ".join ( map(str, self.var) )
         cardstring=" ".join ( map(str, self.card) )
         valstring= " ".join( map(str, self.val))
-        return "\n".join( [ self.name,varstring, cardstring, valstring])
+        return "\n".join( [ 'name: ' + self.name,'var: '+ varstring, 'card: '+ cardstring, 'val: ' + valstring])
 
 
     def setVar(self, var):
