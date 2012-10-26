@@ -142,3 +142,44 @@ def getIndex ( V, I):
     #print vindex
     return vindex.tolist()
 
+def generateAlleleGenotypeMappers( numAlleles):
+    """ analogous to AssignmentToIndex and IndexToAssignment
+        this function maps alleles to genotypes and genotypes to alleles
+        each allele's id is its index in the list of alleles/list of allele freqs
+        Similar for genotypes, its id is its index in list of genotypes
+
+        This function returns to numpy 2-d arrays. if n is the number of alleles
+        and m is the number of genotypes, then the following NumPy data structures
+        are returned
+
+        allelesToGenotypes: n x n matrix that maps pairs of allele IDs to
+        genotype IDs -- if allelesToGenotypes[i, j] = k, then the genotype with
+        ID k comprises of the alleles with IDs i and j
+
+        genotypesToAlleles: m x 2 matrix of allele IDs, where m is the number of
+        genotypes -- if genotypesToAlleles(k, :) = i, j, then the genotype with ID k
+        is comprised of the allele with ID i and the allele with ID j
+
+    """
+    allelesToGenotypes=np.zeros([numAlleles,numAlleles], dtype=np.int)
+    index=0
+    for i in range(numAlleles):
+        for j in range (i,numAlleles):
+            allelesToGenotypes[i, j] = index;
+            index+=1
+
+    for i in range(numAlleles):
+        for j in range(0,i):
+            allelesToGenotypes[i,j] = allelesToGenotypes[j,i]
+
+
+    numGenotypes= (numAlleles * (numAlleles - 1))/2 + numAlleles
+    genotypesToAlleles=np.zeros([numGenotypes,2], dtype=np.int)
+
+    index=0
+    for i in range(numGenotypes):
+        for j in range(i,numAlleles):
+        #print i, j
+            genotypesToAlleles[index, :] = [i, j];
+            index+=1
+    return ( allelesToGenotypes, genotypesToAlleles)
