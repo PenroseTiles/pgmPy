@@ -3,6 +3,7 @@ from Factor import *
 import numpy as np
 from itertools import product
 import sys
+import itertools
 
 def isMember( A, B):
     """ return a python list containing  indices in B where the elements of A are located
@@ -183,3 +184,31 @@ def generateAlleleGenotypeMappers( numAlleles):
             genotypesToAlleles[index, :] = [i, j];
             index+=1
     return ( allelesToGenotypes, genotypesToAlleles)
+
+
+def genotypeToIndex( geno, alleles='ACGT'):
+    """ given a string enumerating possible alleles
+        return the index of geno in enumerated list of genotypes
+        by default, the enumerated list is all 10 possibel genotypes"""
+
+    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, 2) ]
+    print genotypes
+    
+    try:
+        return  genotypes.index(geno)
+    except ValueError:
+        print "genotype not in list of genotypes."
+    
+
+def indexToGenotype( index, alleles='ACGT' ):
+    """ return genotype at a given index position after
+    enumerating all possible genotypes given string of alleles and
+    assigning to a list. By default the list contains all possible 10 genotypes"""
+
+    
+    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, 2) ]
+    
+    try:
+       return genotypes[index]
+    except IndexError:
+        print "Index out of bounds, not a valid index for list of genotypes"
