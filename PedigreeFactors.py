@@ -3,6 +3,7 @@ import numpy as np
 from Factor import *
 from PGMcommon import *
 from FactorOperations import *
+import itertools
 
 class PhenotypeFactor (object):
     """ represents a factor that encodes Pr(phenotype|genotype)
@@ -50,3 +51,43 @@ class PhenotypeFactor (object):
 
     def __str__(self):
         return self.phenotype.__str__()
+
+
+class GenotypeAlleleFreqFactor (object):
+    """ construct a factor that has the probability of each genotype
+        given allele frequencies Pr(genotype|allele_freq)"""
+
+    def __init__(self, allelefreqs, genotypeVar, name):
+        self.allelefreq=allelefreqs
+        #number of alleles == number of allele frequencies passed in
+        numAlleles=len(allelefreqs)
+        self.allelesToGenotypes=None
+        self.genotypesToAlleles=None
+        self.genotypeFactor=None
+
+        #map alleles to genotypes and genotyeps to alleles
+        (self.allelesToGenotypes, self.genotypesToAlleles)=generateAlleleGenotypeMappers(numAlleles)
+        (ngenos,ploidy)=np.shape(self.genotypesToAlleles)
+
+
+        self.genotypeFactor = Factor( [genotypeVar], [], [], name)
+        #the cardinality of the factor is the number of genotypes
+        self.genotypeFactor.setCard( [ngenos] )
+
+        #set the values to zero initially
+        values=np.zeros( (np.prod(self.genotypeFactor.getCard()))).tolist()
+        
+        for i in range (ngenos):
+            alleles=self.genotypesToAlleles[i,:].tolist()
+            
+
+            if alleles[0] == alleles[1]:
+                values[i]= np.prod( [ allelefreqs[j] for j in alleles ])
+                
+            else:
+               values[i]= np.prod( [ allelefreqs[j] for j in alleles ]) * 2
+        
+        self.genotypeFactor.setVal( values )
+
+    def __str__(self):
+        return self.genotypeFactor.__str__()
