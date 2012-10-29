@@ -91,3 +91,55 @@ class GenotypeAlleleFreqFactor (object):
 
     def __str__(self):
         return self.genotypeFactor.__str__()
+
+class GenotypeGivenParentsFactor (object):
+    """ construct factor that has prob of genotype of child given both parents
+        Pr(g_child| g_mother, g_father """
+
+    def __init__(self,numAlleles, genotypeVarChild, genotypeVarParentOne, genotypeVarParentTwo, name):
+        self.genotypeFactor =  Factor( [3, 2, 1 ], [ ], [ ], name)
+
+        #map alleles to genotypes and genotyeps to alleles
+        (self.allelesToGenotypes, self.genotypesToAlleles)=generateAlleleGenotypeMappers(numAlleles)
+
+        (ngenos,ploidy)=np.shape(self.genotypesToAlleles)
+        
+
+        
+        self.genotypeFactor.setCard([ ngenos,ngenos,ngenos ] )
+        #set the values to zero initially
+        values=np.zeros( (np.prod(self.genotypeFactor.getCard()))).tolist()
+
+        #iterate thru variable assignments to random variables
+        #assign probablities based on Punnet square crosses
+        assignments=IndexToAssignment( np.arange(np.prod(self.genotypeFactor.getCard())), self.genotypeFactor.getCard() )-1
+        for z in range( np.prod(self.genotypeFactor.getCard() ) ):
+            curr_assign= assignments[z]
+            childAssignment=int(curr_assign[0])
+
+            parent1gametes= self.genotypesToAlleles[curr_assign[1],:]
+            parent2gametes= self.genotypesToAlleles[curr_assign[2],:]
+            #print 'parental gametes: ', parent1gametes, parent2gametes
+            #print 'child assignment: ', childAssignment
+            #list of tuples containing list of zygote(genotype) tuples
+            zygote_list=list(itertools.product(parent1gametes,parent2gametes))
+            punnet_freq=[  self.allelesToGenotypes[zygote[0],zygote[1]] for zygote in zygote_list ]
+            histc={}
+            hist=[]
+            for g in range( ngenos):
+                histc[g]=0.
+            for x in punnet_freq:
+                histc[x]+=1.
+            #print histc.values()
+            for g in range (ngenos):
+                hist.append ( histc[g] )
+            #print punnet_freq
+            hist=(np.array ( hist)) /4
+            #print 'hist:', hist
+            #print zygote_list
+            values[z]=hist[childAssignment]
+
+        self.genotypeFactor.setVal( values )
+
+    def __str__(self):
+        return self.genotypeFactor.__str__()
