@@ -53,6 +53,39 @@ class PhenotypeFactor (object):
         return self.phenotype.__str__()
 
 
+
+class PhenotypeGivenGenotypeFactor(object):
+    """ construct factor of phenotype|genotype
+        #prob of being effected, given the ith genotype
+        #alphaList[i] is the prob of being effected given the ith genotype """
+    def __init__(self,alphaList, phenotypeVar, genotypeVar , name):
+        self.phenotypeFactor=Factor( [ phenotypeVar, genotypeVar], [], [], name)
+        self.alpha=np.array ( alphaList)
+
+        ngenotypes=len(alphaList)
+        self.phenotypeFactor.setCard( [2, ngenotypes])
+
+        values=[x for x in range( np.prod(self.phenotypeFactor.getCard()))]
+
+        for i in range( len(alphaList )):
+
+            values[i]=alphaList[i]
+            values[i+1]=1-alphaList[i]
+        ctr=0
+        alphas=2*len(alphaList)*[None]
+        for i in range(len(alphaList)):
+            alphas[ctr]=alphaList[i];
+            ctr=ctr+1
+            alphas[ctr]=1-alphaList[i];
+            ctr=ctr+1
+
+        values=alphas
+        self.phenotypeFactor.setVal( values)
+
+    def __str__(self):
+        return self.phenotypeFactor.__str__()
+
+
 class GenotypeAlleleFreqFactor (object):
     """ construct a factor that has the probability of each genotype
         given allele frequencies Pr(genotype|allele_freq)"""
@@ -97,7 +130,7 @@ class GenotypeGivenParentsFactor (object):
         Pr(g_child| g_mother, g_father """
 
     def __init__(self,numAlleles, genotypeVarChild, genotypeVarParentOne, genotypeVarParentTwo, name):
-        self.genotypeFactor =  Factor( [3, 2, 1 ], [ ], [ ], name)
+        self.genotypeFactor =  Factor( [genotypeVarChild, genotypeVarParentOne, genotypeVarParentTwo ], [ ], [ ], name)
 
         #map alleles to genotypes and genotyeps to alleles
         (self.allelesToGenotypes, self.genotypesToAlleles)=generateAlleleGenotypeMappers(numAlleles)
@@ -141,5 +174,136 @@ class GenotypeGivenParentsFactor (object):
 
         self.genotypeFactor.setVal( values )
 
+
+    def genotypeSlice(self):
+        pass
+        #see this http://stackoverflow.com/q/4257394/1735942
+
     def __str__(self):
         return self.genotypeFactor.__str__()
+
+
+##########################
+
+class Ped(object):
+    """ represents a pedigree record in a Ped file http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml#ped """
+
+    def __init__(self,famid='.', indv='.', paternal='.', maternal='.', sex='.', phenotype='.'):
+        """ attributes of a Ped object """
+        self.famid=famid
+        self.individ=indv
+        self.pid=paternal
+        self.mid=maternal
+        self.sex=sex
+        self.pheno=phenotype
+
+
+    def setfamid(self,famid):
+        self.famid=famid
+
+    def setindvid(self,indv):
+        self.individ=indv
+
+    def setmid(self,mid):
+         self.mid=mid
+
+    def setpid(self,pid):
+         self.pid=pid
+
+    def setsex(self,sex):
+         self.sex=sex
+
+    def setpheno(self,pheno):
+         self.pheno=pheno
+
+
+
+    def getfamid(self):
+        return self.famid
+
+    def getid(self):
+        return self.individ
+
+    def getmid(self):
+        return self.mid
+
+    def getpid(self):
+        return self.pid
+
+    def getsex(self):
+        return self.sex
+
+    def getpheno(self):
+        return self.pheno
+
+
+    def isFounder(self):
+        return self.pid == '0' and self.mid == '0'
+
+    def getParents(self):
+
+        return ( self.pid, self.mid)
+
+
+    def __str__(self):
+        return "\t".join( [ self.famid, self.individ, self.pid, self.mid, self.sex, self.pheno] )
+
+
+class Pedfile(object):
+    """ a Pedfile object has a list of Ped  objects """
+
+    def __init__(self,filename):
+        self.filename=filename
+        self.pedlist=[]
+
+    def parsePedfile(self, fh):
+        """ given a filehandle to a *.ped file read its contents and populate the list pedlist with Ped objects """
+        for line in fh:
+            fields=line.strip().split('\t')
+            (famid, indv, pid, mid, sex, pheno)=fields[0:6]
+            self.pedlist.append( Ped(famid, indv, pid, mid, sex, pheno) )
+
+    def toString(self):
+        for obj in self.pedlist:
+            print obj.toString()
+
+    def returnFounders(self):
+        """ return the founders in a ped file (those with unknown paternal and maternids """
+        founders=[]
+
+        for pedobj in self.pedlist:
+            if pedobj.getpid() == "0":
+                founders.append(pedobj)
+
+        return founders
+
+    def returnFounderIds(self):
+        """ return the indiv ids of the founders in the ped file"""
+        founderids=[]
+        for pedobj in self.pedlist:
+            if pedobj.getpid() == "0":
+                founderids.append( pedobj.getid() )
+        return founderids
+
+    def returnNonFounderIds(self):
+        """ return the indiv ids of the founders in the ped file"""
+        nonfounderids=[]
+        for pedobj in self.pedlist:
+            if pedobj.getpid() != "0":
+                nonfounderids.append( pedobj.getid() )
+        return nonfounderids
+
+    def returnNonFounders(self):
+        """ return the founders in a ped file (those with unknown paternal and maternids """
+        nonfounders=[]
+
+        for pedobj in self.pedlist:
+            if pedobj.getpid() != "0":
+                nonfounders.append(pedobj)
+
+        return nonfounders
+
+    def returnIndivids(self):
+        """ return a list of indvi ids from the ped file """
+        #samplelist=[]
+        return [ ped.getid() for ped in self.pedlist]
