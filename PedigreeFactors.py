@@ -227,7 +227,59 @@ class ChildCopyGivenParentalsFactor(object):
                     index+=1
         print values
         self.geneCopyFactor.setVal( values )
-        print self.geneCopyFactor
+  
+class ChildCopyGivenFreqFactor(object):
+    """ for a founder, its particular haplotype is proprortional to the
+    given allelel freq of the locus. This factor is part of the decoupled
+    Bayesian Genetic network , along with ChildCopyGivenParentalsFactor"""
+    
+    def __init__(self, alleleFreqs, geneCopyVar):
+        numAlleles = len(alleleFreqs)
+        self.geneCopyFactor=Factor( [geneCopyVar], [], [], 'founderHap')
+        self.geneCopyFactor.setCard ( [numAlleles])
+        self.geneCopyFactor.setVal( alleleFreqs )
+        #geneCopyFactor = struct('var', [], 'card', [], 'val', [])
+        #geneCopyFactor.var(1) = geneCopyVar;
+        #geneCopyFactor.card(1) = numAlleles;
+        #geneCopyFactor.val = alleleFreqs';
+
+
+class phenotypeGivenHaplotypesFactor(object):
+    """ factor represents Pr(phenotype| paternal haplotype, maternal haplotype)
+    very similiar to PhenotypeGivenGenotypeFactor, but we are de-coupling into
+    paternal and maternal alleles rather than genotype"""
+
+    def __init__(self, alphaList, numAlleles, geneCopyVarOne, geneCopyVarTwo, phenotypeVar):
+        
+        self.numalleles=numAlleles
+        self.alphaList=alphaList
+        self.phenotypeFactor=Factor([phenotypeVar,geneCopyVarOne, geneCopyVarTwo], [], [], 'phenotype| geneCopy1, geneCopy2')
+
+        ngenos=len(alphaList)
+        self.phenotypeFactor.setCard( [ 2, numAlleles, numAlleles])
+        #phenotypeFactor.val = zeros(1, prod(phenotypeFactor.card));
+        values=np.zeros( (1, np.prod(self.phenotypeFactor.getCard()))).flatten().tolist()
+
+        affectedAlphas=alphaList
+        unaffectedAlphas=[ 1- alpha for alpha in alphaList]
+
+
+        (allelesToGenotypes, genotypesToAlleles) = generateAlleleGenotypeMappers(numAlleles)
+        assignments=IndexToAssignment( np.arange(np.prod(self.phenotypeFactor.getCard())), self.phenotypeFactor.getCard() )-1
+        for z in range( np.prod(self.phenotypeFactor.getCard() ) ):
+            curr_assign= assignments[z]
+            curr_assign=assignments[z]
+            genotype_num=allelesToGenotypes[curr_assign[1], curr_assign[2]]
+            if curr_assign[0] == 0:
+                values[z] = affectedAlphas[genotype_num]
+            else:
+                values[z] = unaffectedAlphas[genotype_num]
+        self.phenotypeFactor.setVal( values )
+
+
+            #genotype_num=allelesToGenotypes(assignment(2), assignment(3));
+    def __str__(self):
+        return self.phenotypeFactor.__str__()
 ##########################
 
 class Ped(object):
