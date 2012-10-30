@@ -183,6 +183,51 @@ class GenotypeGivenParentsFactor (object):
         return self.genotypeFactor.__str__()
 
 
+class ChildCopyGivenParentalsFactor(object):
+    """ this represents a de-coupled factor
+        given a parents two haplotypes, returns
+        factor whose values are the probablity
+        of inheriting (grand)paternal or (grand)maternal
+        haplotype. This allows for some more flexibility
+        in modeling inheritance, rather than clumping
+        a single parent's haplotype into a genotype
+        i.e. GenotypeGivenParentsFactor """
+
+    def __init__(self, numAlleles, geneCopyVarChild, geneCopyHapOne, geneCopyHapTwo):
+        self.numalleles=numAlleles
+        self.hapone=geneCopyVarChild
+        self.haptwo=geneCopyHapTwo
+
+        #geneCopyFactor = struct('var', [], 'card', [], 'val', []);
+        self.geneCopyFactor=Factor( [geneCopyVarChild, geneCopyHapOne, geneCopyHapTwo ], [], [], 'child|hap1,hap2')
+        self.geneCopyFactor.setCard( [self.numalleles,self.numalleles,self.numalleles ])
+        values=np.zeros( np.prod([ self.numalleles,self.numalleles,self.numalleles])).tolist()
+        #this keeps track of what posiiton you are in the values list
+        index=0
+        #the number of iterations thru the nested for loops should be equal to numallels^3
+
+        for i in range(numAlleles):
+        #iterate through alleles from
+        #grand(paternal) haplotype
+            for j in range(numAlleles):
+            #iterate through alleles from
+            #grand(maternal) haplotype
+                for k in range(numAlleles):
+                #iterate thru child alleles
+                    print i, j, k
+                    if j==k:#child has grandmotherhap
+                        if i==k:#grandfatherhap is the same
+                            values[index]=1
+                        else:
+                            values[index]=.5
+                    elif i==k:#child has grandfather hap
+                        values[index]=.5
+                    else:
+                        pass
+                    index+=1
+        print values
+        self.geneCopyFactor.setVal( values )
+        print self.geneCopyFactor
 ##########################
 
 class Ped(object):
