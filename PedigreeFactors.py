@@ -254,19 +254,17 @@ class Pedfile(object):
 
     def __init__(self,filename):
         self.filename=filename
+        self.fh=open(self.filename, 'r')
         self.pedlist=[]
 
-    def parsePedfile(self, fh):
+    def parsePedfile(self):
         """ given a filehandle to a *.ped file read its contents and populate the list pedlist with Ped objects """
-        for line in fh:
+        for line in self.fh:
             fields=line.strip().split('\t')
             (famid, indv, pid, mid, sex, pheno)=fields[0:6]
             self.pedlist.append( Ped(famid, indv, pid, mid, sex, pheno) )
 
-    def toString(self):
-        for obj in self.pedlist:
-            print obj.toString()
-
+    
     def returnFounders(self):
         """ return the founders in a ped file (those with unknown paternal and maternids """
         founders=[]
@@ -307,3 +305,15 @@ class Pedfile(object):
         """ return a list of indvi ids from the ped file """
         #samplelist=[]
         return [ ped.getid() for ped in self.pedlist]
+
+    def getPedList(self):
+        return self.pedlist
+    def getTotalSize(self):
+        return len(self.pedlist)
+
+    def yieldMembers(self):
+        for pedobj in self.pedlist:
+            yield pedobj
+
+    def __str__(self):
+        return "\n".join( [ x.__str__() for x in self.pedlist ] )
