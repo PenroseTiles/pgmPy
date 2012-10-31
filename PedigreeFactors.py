@@ -49,6 +49,14 @@ class PhenotypeFactor (object):
 
         self.phenotype=phenotype
 
+
+    def getVar(self):
+        return self.phenotype.getVar()
+    def getCard(self):
+        return self.phenotype.getCard()
+    def getVal(self):
+        return self.phenotype.getVal()
+
     def __str__(self):
         return self.phenotype.__str__()
 
@@ -81,6 +89,14 @@ class PhenotypeGivenGenotypeFactor(object):
 
         values=alphas
         self.phenotypeFactor.setVal( values)
+
+    def getVar(self):
+        return self.phenotypeFactor.getVar()
+    def getCard(self):
+        return self.phenotypeFactor.getCard()
+    def getVal(self):
+        return self.phenotypeFactor.getVal()
+
 
     def __str__(self):
         return self.phenotypeFactor.__str__()
@@ -121,6 +137,15 @@ class GenotypeAlleleFreqFactor (object):
                values[i]= np.prod( [ allelefreqs[j] for j in alleles ]) * 2
         
         self.genotypeFactor.setVal( values )
+
+
+    def getVar(self):
+        return self.genotypeFactor.getVar()
+    def getCard(self):
+        return self.genotypeFactor.getCard()
+    def getVal(self):
+        return self.genotypeFactor.getVal()
+
 
     def __str__(self):
         return self.genotypeFactor.__str__()
@@ -174,6 +199,13 @@ class GenotypeGivenParentsFactor (object):
 
         self.genotypeFactor.setVal( values )
 
+    def getVar(self):
+        return self.genotypeFactor.getVar()
+    def getCard(self):
+        return elf.genotypeFactor.getCard()
+    def getVal(self):
+        return self.genotypeFactor.getVal()
+
 
     def genotypeSlice(self):
         pass
@@ -225,8 +257,17 @@ class ChildCopyGivenParentalsFactor(object):
                     else:
                         pass
                     index+=1
-        print values
+        #print values
         self.geneCopyFactor.setVal( values )
+
+    def getVar(self):
+        return self.geneCopyFactor.getVar()
+    def getCard(self):
+        return self.geneCopyFactor.getCard()
+    def getVal(self):
+        return self.geneCopyFactor.getVal()
+    def __str__(self):
+        return self.geneCopyFactor.__str__()
   
 class ChildCopyGivenFreqFactor(object):
     """ for a founder, its particular haplotype is proprortional to the
@@ -243,6 +284,15 @@ class ChildCopyGivenFreqFactor(object):
         #geneCopyFactor.card(1) = numAlleles;
         #geneCopyFactor.val = alleleFreqs';
 
+
+    def getVar(self):
+        return self.geneCopyFactor.getVar()
+    def getCard(self):
+        return self.geneCopyFactor.getCard()
+    def getVal(self):
+        return self.geneCopyFactor.getVal()
+    def __str__(self):
+        return self.geneCopyFactor.__str__()
 
 class phenotypeGivenHaplotypesFactor(object):
     """ factor represents Pr(phenotype| paternal haplotype, maternal haplotype)
@@ -278,8 +328,21 @@ class phenotypeGivenHaplotypesFactor(object):
 
 
             #genotype_num=allelesToGenotypes(assignment(2), assignment(3));
+
+
+    def getVar(self):
+        return self.phenotypeFactor.getVar()
+    def getCard(self):
+        return self.phenotypeFactor.getCard()
+    def getVal(self):
+        return self.phenotypeFactor.getVal()
     def __str__(self):
         return self.phenotypeFactor.__str__()
+
+    def __str__(self):
+        return self.phenotypeFactor.__str__()
+
+
 ##########################
 
 class Ped(object):
