@@ -5,6 +5,13 @@ from itertools import product
 import sys
 import itertools
 
+def getUniqueVar( factorList):
+    """ given factorList which is a list of Factor objects
+        return a list of unique variables appearing in the
+        Factor objects. See http://stackoverflow.com/a/2151553/1735942 """
+
+    return list(set().union(*[  list(f.getVar())  for f in factorList ] ))
+
 def isMember( A, B):
     """ return a python list containing  indices in B where the elements of A are located
         A and B are numpy 1-d arrays
