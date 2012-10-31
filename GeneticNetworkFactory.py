@@ -27,7 +27,8 @@ class GeneticNetworkFactory(object):
         self.pedigree=Pedfile(pedfile)
         self.pedigree.parsePedfile()
         self.pedlist=self.pedigree.getPedList()
-
+        self.pedids=self.pedigree.returnIndivids()
+        #print self.pedids
 
         #list of factors that will comprise the Genetic network
         self.totalFactors=self.pedigree.getTotalSize() * 2
@@ -37,17 +38,28 @@ class GeneticNetworkFactory(object):
     def constructNetwork(self):
         totalPeople=self.pedigree.getTotalSize()
         for i in range( totalPeople ):
-    
+            
+            
             if self.pedlist[i].isFounder():
                 #print self.pedlist[i].getid()
-                self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,self.pedlist[i].getid(),self.pedlist[i].getid())
+                self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,i,self.pedlist[i].getid() + " genotype ")
+                #self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,self.pedlist[i].getid(),self.pedlist[i].getid())
                 #factorList(i)=genotypeGivenAlleleFreqsFactor(alleleFreqs,i);
             else:
                 #3print self.pedlist[i].getParents(), self.pedlist[i].getid()
                 #GenotypeGivenParentsFactor(2,"bart","homer","marge","""Bart | Homer, Marge """)
-                self.factorList[i]=GenotypeGivenParentsFactor(self.totalAlleles, self.pedlist[i].getid(), self.pedlist[i].getParents()[0], self.pedlist[i].getParents()[1], "child|Father,Child")
+                #self.factorList[i]=GenotypeGivenParentsFactor(self.totalAlleles, self.pedlist[i].getid(), self.pedlist[i].getParents()[0], self.pedlist[i].getParents()[1], "child|Father,Child")
+                parent1Index=self.pedids.index( self.pedlist[i].getParents()[0] )
+                parent2Index=self.pedids.index( self.pedlist[i].getParents()[1] )
+                child=self.pedlist[i].getid()
+                parent1name=self.pedlist[parent1Index].getid()
+                parent2name=self.pedlist[parent2Index].getid()
+                name=child+" genotype |"+parent1name+","+parent2name
+                self.factorList[i]=GenotypeGivenParentsFactor(self.totalAlleles, i, parent1Index ,  parent2Index , name)
         
-            self.factorList[i+totalPeople]=PhenotypeGivenGenotypeFactor(self.alphaList, i, i+totalPeople, "|".join([ str(i), str(i+totalPeople)]) )
+            name=self.pedlist[i].getid()+" phenotype | " + self.pedlist[i].getid() + " genotype"
+
+            self.factorList[i+totalPeople]=PhenotypeGivenGenotypeFactor(self.alphaList,i+totalPeople,i, name )
 
     def getFactorList(self):
         return self.factorList
