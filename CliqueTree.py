@@ -1,5 +1,8 @@
+from Factor import *
+from FactorOperations import *
+import numpy as np 
 class CliqueTree(object):
-    'MyClass constructor'
+    'represent a Clique tree'
 
     def __init__(self, nodeList=[], edges=[], factorList=[],evidence=[]):
         self.nodeList=nodeList
@@ -40,11 +43,13 @@ class CliqueTree(object):
 
         for i in range (len(self.factorList)):
             if Z in self.factorList[i].getVar().tolist():
-                useFactors.append(i)
+                useFactors.append(i)#the ith factor is being currently involved in elimination
                 scope=list(set.union(set(scope), self.factorList[i].getVar().tolist() ))
 
-        print useFactors
-        print scope
+        print 'scope: ', scope
+        print 'useFactors: ', useFactors
+        print 'Z: ', Z
+
 
         # update edge map
         # These represent the induced edges for the VE graph.
@@ -54,7 +59,44 @@ class CliqueTree(object):
                 if i!=j:
                     self.edges[i,j]=1
                     self.edges[j,i]=1
-        self.edges[Z,:]=0
-        self.edges[:,Z]=0
+        self.edges[Z-1,:]=0
+        self.edges[:,Z-1]=0
+
+        #nonUseFactors = setdiff(1:length(F),[useFactors]);
+        #list( set.difference( set( range( len(self.factorList)) , set(useFactors) ) )
+
+        #these are teh indices of factorList which are not involved in VE
+        unusedFactors= list( set.difference ( set(range(len(self.factorList))), set(useFactors)    )   )
+        print 'unusedFactors:', unusedFactors
+        print 'useFactors ', useFactors
+        print 'length of unused factors: ', len(unusedFactors)
+
+        newF=len(unusedFactors)*[None]
+        newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
+        print 'newmap initially: ', newmap
+        for i in range( len(unusedFactors)):
+            newF[i]=self.factorList[ unusedFactors[i] ]
+            #print unusedFactors[i]
+            newmap[ unusedFactors[i] ]= i
+            
+        print 'newmap: ', newmap
+
+        newFactor = Factor( [], [], [], 'newFactor')
+
+        for i in range( len (useFactors)):
+            newFactor = FactorProduct(newFactor,self.factorList[ useFactors[i] ])
+        print newFactor
+
+        newFactor = FactorMarginalization( newFactor,[Z] )
+        #newF(length(nonUseFactors)+1) = newFactor;
+        newF.append ( newFactor )
         
 
+        #for i in range ( len( unusedFactors) ):
+        #    print i
+        #    newmap [ unusedFactors[i]-1 ] = i+1
+        
+        
+
+
+        
