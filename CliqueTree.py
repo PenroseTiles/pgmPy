@@ -10,7 +10,7 @@ class CliqueTree(object):
         self.factorList=factorList
         self.evidence=evidence
         self.card= []
-        self.factorInds=[]
+        self.factorInds= len( factorList ) * [None]
 
 
     def toString(self):
@@ -29,6 +29,7 @@ class CliqueTree(object):
 
     def setFactorList(self,factorList):
         self.factorList=factorList
+        self.factorInds= len( factorList ) * [None]
 
     def setEvidence(self,evidence):
         self.evidence=evidence
@@ -105,33 +106,52 @@ class CliqueTree(object):
             #print unusedFactors[i]
             newmap[ unusedFactors[i] ]= i
             
-        print 'newmap: ', newmap
+        print 'newmap ', newmap,"\n"
+        print 'length of newmap: ', len(newmap), "\n"
 
         newFactor = Factor( [], [], [], 'newFactor')
 
         for i in range( len (useFactors)):
             newFactor = FactorProduct(newFactor,self.factorList[ useFactors[i] ])
-        print newFactor
+        print 'newFactor:\n ', newFactor
+        #for z in range ( len(newF) ):
+        #    print z, newF[z].getVar()
+
 
         newFactor = FactorMarginalization( newFactor,[Z] )
         #newF(length(nonUseFactors)+1) = newFactor;
         newF.append ( newFactor )
-        
-        
-        self.nodeList.append ( scope )
-        print 'self.nodeList ', self.nodeList
-        newC=len( self.nodeList )
+        #print 'length of newF after FactorMarginaliztion: ', len(newF)
+        #for z in range ( len(newF) ):
+        #    print z, newF[z].getVar()
+        #update the factorList, after eliminating the variable and generating the newFactor
+        self.factorList=newF
 
+        self.nodeList.append ( scope ) #add to the node list of the clique tree
+                                       #the factors  that contained the variable to be eliminated
+        print 'self.nodeList ', self.nodeList
+        #newC is the total number of nodes in the clique tree
+        newC=len( self.nodeList )
+        #print 'newC: ', newC
+
+        #print self.edges
+
+        #print 'factorInds: ',self.factorInds
+        #self.factorInds[ newC -1] = len(unusedFactors) + 1
         self.factorInds.append ( len(unusedFactors) + 1  )
 
+
+        print "last for loop ...\n"
         for i in range( newC -1 ):
-            if self.factorInds [ i ] in useFactors:
-                self.edges[ i, newC-1 ] = 1
-                self.edges [ newC-1, i ] = 1
-                self.factorInds[ i ] = 0
+            print 'i: ', i
+            if self.factorInds [ i-1 ] in useFactors:
+                self.edges[ i-1, newC-1 ] = 1
+                self.edges [ newC-1, i-1 ] = 1
+                self.factorInds[ i-1 ] = 0
             else:
-                if self.factorInds [i] != 0:
-                    C.factorInds[ i ]  = newmap [ self.factorInds[i] ]
+                if self.factorInds [i] != None:
+                    print 'factorInds[i]: ', self.factorInds[i]
+                    self.factorInds[ i ]  = newmap [ self.factorInds[i] -1 ]
                     
 
 
