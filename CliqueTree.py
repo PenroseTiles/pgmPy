@@ -71,11 +71,12 @@ class CliqueTree(object):
 
 
 
-
+        #print 'length of factor list: ', len(self.factorList)
         #get a list containining the index in self.factorLlist of factors
         #that contain the variable Z to be eliminated
         # get the scope of variables from the factors that contain variable Z
         for i in range (len(self.factorList)):
+            #print self.factorList[i]
             if Z in self.factorList[i].getVar().tolist():
                 useFactors.append(i)#the ith factor is being currently involved in elimination
                 scope=list(set.union(set(scope), self.factorList[i].getVar().tolist() ))
@@ -102,18 +103,20 @@ class CliqueTree(object):
 
         G=nx.from_numpy_matrix(E)
         print 'induced graph edges:\n', (G.edges())
-        nx.draw_shell(G)
-        plt.show()
+
+        #nx.draw_shell(G)
+        #plt.show()
 
         
         #these are teh indices of factorList which are not involved in VE
         unusedFactors= list( set.difference ( set(range(len(self.factorList))), set(useFactors)    )   )
         #print 'unusedFactors:', unusedFactors
         print 'useFactors ', useFactors
-        #print 'length of unused factors: ', len(unusedFactors)
-
-        newF=len(unusedFactors)*[None]
-        newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
+        print 'length of unused factors: ', len(unusedFactors)
+        newF=None
+        if len(unusedFactors) > 0:
+            newF=len(unusedFactors)*[None]
+            newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
         #print 'newmap initially: ', newmap
         for i in range( len(unusedFactors)):
             newF[i]=self.factorList[ unusedFactors[i] ]
@@ -133,14 +136,19 @@ class CliqueTree(object):
 
 
         newFactor = FactorMarginalization( newFactor,[Z] )
+        #print 'newFactor: ',newFactor
         #newF(length(nonUseFactors)+1) = newFactor;
-        newF.append ( newFactor )
+        if newFactor != None:
+            newF.append ( newFactor )
+
         #print 'length of newF after FactorMarginaliztion: ', len(newF)
         #for z in range ( len(newF) ):
         #    print z, newF[z].getVar()
         #update the factorList, after eliminating the variable and generating the newFactor
-        self.factorList=newF
-        return E
+
+        if newF != None:
+            self.factorList=newF
+        #return E
         ########################################################################
         #if len(scope) >= 1:
         self.nodeList.append ( scope )
@@ -170,7 +178,7 @@ class CliqueTree(object):
          #           print 'factorInds[i]: ', self.factorInds[i]
                     self.factorInds[ i ]  = newmap [ self.factorInds[i] -1 ]
                     
-        #return E
+        return E
 
         
         
