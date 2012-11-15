@@ -12,7 +12,7 @@ class CliqueTree(object):
         self.factorList=factorList
         self.evidence=evidence
         self.card= []
-        self.factorInds= len( factorList ) * [None]
+        self.factorInds= []
 
 
     def toString(self):
@@ -31,7 +31,7 @@ class CliqueTree(object):
 
     def setFactorList(self,factorList):
         self.factorList=factorList
-        self.factorInds= len( factorList ) * [None]
+        #self.factorInds= len( factorList ) * [None]
 
     def setEvidence(self,evidence):
         self.evidence=evidence
@@ -82,9 +82,9 @@ class CliqueTree(object):
                 scope=list(set.union(set(scope), self.factorList[i].getVar().tolist() ))
 
         #print 'scope: ', scope
-        print 'useFactors: ', useFactors
-        print 'Z: ', Z
-        print 'scope: ', scope
+        #print 'useFactors: ', useFactors
+        #print 'Z: ', Z
+        #print 'scope: ', scope
         
 
 
@@ -102,7 +102,7 @@ class CliqueTree(object):
         E[:,Z-1]=0
 
         G=nx.from_numpy_matrix(E)
-        print 'induced graph edges:\n', (G.edges())
+        #print 'induced graph edges:\n', (G.edges())
 
         #nx.draw_shell(G)
         #plt.show()
@@ -111,12 +111,13 @@ class CliqueTree(object):
         #these are teh indices of factorList which are not involved in VE
         unusedFactors= list( set.difference ( set(range(len(self.factorList))), set(useFactors)    )   )
         #print 'unusedFactors:', unusedFactors
-        print 'useFactors ', useFactors
-        print 'length of unused factors: ', len(unusedFactors)
+        #print 'useFactors ', useFactors
+        #print 'length of unused factors + 1: ', len(unusedFactors) + 1
         newF=None
         if len(unusedFactors) > 0:
             newF=len(unusedFactors)*[None]
             newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
+            #newmap= len(newmap) * [-1]
         #print 'newmap initially: ', newmap
         for i in range( len(unusedFactors)):
             newF[i]=self.factorList[ unusedFactors[i] ]
@@ -157,27 +158,33 @@ class CliqueTree(object):
         #print 'self.nodeList ', self.nodeList
         #newC is the total number of nodes in the clique tree
         newC=len( self.nodeList )
-        #print 'newC: ', newC
+        print 'newC: ', newC
 
         #print self.edges
 
         #print 'factorInds: ',self.factorInds
-        #self.factorInds[ newC -1] = len(unusedFactors) + 1
+        
         self.factorInds.append ( len(unusedFactors) + 1  )
+        
 
-
-        #print "last for loop ...\n"
+        print 'range( newC -1) ', range( newC-1  )
+        print 'factorInds: ', self.factorInds
         for i in range( newC -1 ):
-            #print 'i: ', i
-            if self.factorInds [ i-1 ] in useFactors:
-                self.edges[ i-1, newC-1 ] = 1
-                self.edges [ newC-1, i-1 ] = 1
-                self.factorInds[ i-1 ] = 0
+            
+            if self.factorInds [ i ] -1 in useFactors:
+                self.edges[ i, newC ] = 1
+                self.edges [ newC, i ] = 1
+                self.factorInds[ i ]  = 0
             else:
                 if self.factorInds [i] != None:
-         #           print 'factorInds[i]: ', self.factorInds[i]
-                    self.factorInds[ i ]  = newmap [ self.factorInds[i] -1 ]
+                    print 'i: ', i
+                    print 'factorInds: ', self.factorInds
+                    print 'newmap: ', newmap
+                    print 'newmap [ self.factorInds[i] -1: ', newmap [ self.factorInds[i] -1 ]
+                    print 'self.factorInds[ i ]  = newmap [ self.factorInds[i] - 1  ] + 1 '
+                    self.factorInds[ i ]  = newmap [ self.factorInds[i] - 1  ] + 1
                     
+        print 'factorInds right before returning: ', self.factorInds
         return E
 
         
