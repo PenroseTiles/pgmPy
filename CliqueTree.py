@@ -48,12 +48,12 @@ class CliqueTree(object):
         return self.edges
 
     def getFactorList(self):
-        return self.factorList
+        return factorList
 
     def getEvidence(self):
         return self.evidence
 
-    def eliminateVar(self,Z,E):
+    def eliminateVar(self,Z,E,factorList):
         """ a variable elimination function
             based on https://github.com/indapa/PGM/blob/master/Prog4/EliminateVar.m
 
@@ -71,15 +71,15 @@ class CliqueTree(object):
 
 
 
-        #print 'length of factor list: ', len(self.factorList)
+        #print 'length of factor list: ', len(factorList)
         #get a list containining the index in self.factorLlist of factors
         #that contain the variable Z to be eliminated
         # get the scope of variables from the factors that contain variable Z
-        for i in range (len(self.factorList)):
-            #print self.factorList[i]
-            if Z in self.factorList[i].getVar().tolist():
+        for i in range (len(factorList)):
+            
+            if Z in factorList[i].getVar().tolist():
                 useFactors.append(i)#the ith factor is being currently involved in elimination
-                scope=list(set.union(set(scope), self.factorList[i].getVar().tolist() ))
+                scope=list(set.union(set(scope), factorList[i].getVar().tolist() ))
 
         #print 'scope: ', scope
         #print 'useFactors: ', useFactors
@@ -109,7 +109,7 @@ class CliqueTree(object):
 
         
         #these are teh indices of factorList which are not involved in VE
-        unusedFactors= list( set.difference ( set(range(len(self.factorList))), set(useFactors)    )   )
+        unusedFactors= list( set.difference ( set(range(len(factorList))), set(useFactors)    )   )
         #print 'unusedFactors:', unusedFactors
         #print 'useFactors ', useFactors
         #print 'length of unused factors + 1: ', len(unusedFactors) + 1
@@ -117,12 +117,11 @@ class CliqueTree(object):
         if len(unusedFactors) > 0:
             newF=len(unusedFactors)*[None]
             newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
-            #newmap= len(newmap) * [-1]
-        #print 'newmap initially: ', newmap
-        for i in range( len(unusedFactors)):
-            newF[i]=self.factorList[ unusedFactors[i] ]
-            #print unusedFactors[i]
-            newmap[ unusedFactors[i] ]= i
+            
+
+            for i in range( len(unusedFactors)):
+                newF[i]=factorList[ unusedFactors[i] ]
+                newmap[ unusedFactors[i] ]= i
             
         #print 'newmap ', newmap,"\n"
         #print 'length of newmap: ', len(newmap), "\n"
@@ -130,10 +129,8 @@ class CliqueTree(object):
         newFactor = Factor( [], [], [], 'newFactor')
 
         for i in range( len (useFactors)):
-            newFactor = FactorProduct(newFactor,self.factorList[ useFactors[i] ])
-        #print 'newFactor:\n ', newFactor
-        #for z in range ( len(newF) ):
-        #    print z, newF[z].getVar()
+            newFactor = FactorProduct(newFactor,factorList[ useFactors[i] ])
+        
 
 
         newFactor = FactorMarginalization( newFactor,[Z] )
@@ -142,27 +139,20 @@ class CliqueTree(object):
         if newFactor != None:
             newF.append ( newFactor )
 
-        #print 'length of newF after FactorMarginaliztion: ', len(newF)
-        #for z in range ( len(newF) ):
-        #    print z, newF[z].getVar()
-        #update the factorList, after eliminating the variable and generating the newFactor
+        
 
         if newF != None:
-            self.factorList=newF
+            factorList=newF
         #return E
+
         ########################################################################
         #if len(scope) >= 1:
         self.nodeList.append ( scope )
-        #    print 'added to nodeList!'#add to the node list of the clique tree
-                                           #the factors  that contained the variable to be eliminated
-        #print 'self.nodeList ', self.nodeList
+        
         #newC is the total number of nodes in the clique tree
         newC=len( self.nodeList )
         print 'newC: ', newC
 
-        #print self.edges
-
-        #print 'factorInds: ',self.factorInds
         
         self.factorInds.append ( len(unusedFactors) + 1  )
         
@@ -171,21 +161,28 @@ class CliqueTree(object):
         print 'factorInds: ', self.factorInds
         for i in range( newC -1 ):
             
-            if self.factorInds [ i ] -1 in useFactors:
-                self.edges[ i, newC ] = 1
-                self.edges [ newC, i ] = 1
+            #if self.factorInds [ i ] -1 in useFactors:
+            #here was the off by onoe erorr - the values in factorInds
+            #were one-bsed, need to subtract 1
+            if self.factorInds [ i ] -1  in useFactors:
+            
+                self.edges[ i, newC-1 ] = 1
+                self.edges [ newC-1, i ] = 1
                 self.factorInds[ i ]  = 0
             else:
-                if self.factorInds [i] != None:
-                    print 'i: ', i
-                    print 'factorInds: ', self.factorInds
-                    print 'newmap: ', newmap
-                    print 'newmap [ self.factorInds[i] -1: ', newmap [ self.factorInds[i] -1 ]
-                    print 'self.factorInds[ i ]  = newmap [ self.factorInds[i] - 1  ] + 1 '
-                    self.factorInds[ i ]  = newmap [ self.factorInds[i] - 1  ] + 1
+                if self.factorInds [i] != 0:
+                    #print 'i: ', i
+                    #print 'factorInds: ', self.factorInds
+                    #print 'newmap: ', newmap
+                    #print 'newmap [ self.factorInds[i] -1: ', newmap [ self.factorInds[i] -1 ]
+                    #print 'self.factorInds[ i ]  = newmap [ self.factorInds[i] - 1  ] + 1 '
+                    if len(unusedFactors) > 0:
+                        #self.factorInds[ i ]  = newmap [ self.factorInds[i] -1  ] +1
+                        self.factorInds[ i ]  = newmap [ self.factorInds[i] -1  ] +1
+                        #self.factorInds[ i ]  = newmap [ self.factorInds[i]   ]
                     
-        print 'factorInds right before returning: ', self.factorInds
-        return E
+        #print 'factorInds right before returning: ', self.factorInds
+        return E, factorList
 
         
         
