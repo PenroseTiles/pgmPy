@@ -2,7 +2,7 @@ from Factor import *
 from FactorOperations import *
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
+
 class CliqueTree(object):
     'represent a Clique tree'
 
@@ -62,7 +62,8 @@ class CliqueTree(object):
             page 298
 
             E is a numpy 2d matrix representing adjacency matrix of variables
-            one a variable is eliminated, its edges are removed from E
+            It represents the induced VE graph
+            Once a variable is eliminated, its edges are removed from E
 
             """
 
@@ -71,7 +72,7 @@ class CliqueTree(object):
 
 
 
-        #print 'length of factor list: ', len(factorList)
+        
         #get a list containining the index in self.factorLlist of factors
         #that contain the variable Z to be eliminated
         # get the scope of variables from the factors that contain variable Z
@@ -81,18 +82,16 @@ class CliqueTree(object):
                 useFactors.append(i)#the ith factor is being currently involved in elimination
                 scope=list(set.union(set(scope), factorList[i].getVar().tolist() ))
 
-        #print 'scope: ', scope
-        #print 'useFactors: ', useFactors
-        #print 'Z: ', Z
-        #print 'scope: ', scope
         
-
-
         # update edge map
-        # These represent the induced edges for the VE graph.
+        """ These represent the induced edges for the VE graph.
         #once the variable Z is eliminated, its edges are removed from the graph
         # but in the process of elimination, we create a new factor. This
         #inroduces fill edges pg. 307 Koller and Friedman
+        Z is one based, but the indices in E are zero based, hence Z-1
+        also the variable names in scope are 1 based, so we subtract 1 when
+        updating the induced VE graph """
+
         for i in range ( len(scope)):
             for j in range ( len(scope)):
                 if i != j:
@@ -101,24 +100,24 @@ class CliqueTree(object):
         E[Z-1,:]=0
         E[:,Z-1]=0
 
-        G=nx.from_numpy_matrix(E)
+        #G=nx.from_numpy_matrix(E)
         #print 'induced graph edges:\n', (G.edges())
-
         #nx.draw_shell(G)
         #plt.show()
 
         
-        #these are teh indices of factorList which are not involved in VE
+        #these are the indices of factorList which are not involved in VE
         unusedFactors= list( set.difference ( set(range(len(factorList))), set(useFactors)    )   )
-        #print 'unusedFactors:', unusedFactors
-        #print 'useFactors ', useFactors
-        #print 'length of unused factors + 1: ', len(unusedFactors) + 1
+        
         newF=None
+        #check first if there are any unused factors left!
         if len(unusedFactors) > 0:
             newF=len(unusedFactors)*[None]
             newmap=np.zeros(max(unusedFactors)+1,dtype=int).tolist()
             
-
+            #newF is a new factor list, we populate it first
+            #with the unused factors
+            #newmap is maps the new location of ith unusedFactor
             for i in range( len(unusedFactors)):
                 newF[i]=factorList[ unusedFactors[i] ]
                 newmap[ unusedFactors[i] ]= i
@@ -128,11 +127,13 @@ class CliqueTree(object):
 
         newFactor = Factor( [], [], [], 'newFactor')
 
+        #we multiple in all the factors that containt the variable Z
         for i in range( len (useFactors)):
             newFactor = FactorProduct(newFactor,factorList[ useFactors[i] ])
         
 
-
+        #then we marginalize Z out and obtain a new factor
+        #then append it the end of newF, the new factor list
         newFactor = FactorMarginalization( newFactor,[Z] )
         #print 'newFactor: ',newFactor
         #newF(length(nonUseFactors)+1) = newFactor;
@@ -146,24 +147,28 @@ class CliqueTree(object):
         #return E
 
         ########################################################################
-        #if len(scope) >= 1:
+        """ the remaining code builds the edges of the clique tree """
+
+        #adda new node with the factors that contain the variable Z
         self.nodeList.append ( scope )
         
         #newC is the total number of nodes in the clique tree
         newC=len( self.nodeList )
-        print 'newC: ', newC
+        #print 'newC: ', newC
 
-        
+        #factorInds are individual factors with one variable ... I think
         self.factorInds.append ( len(unusedFactors) + 1  )
         
 
-        print 'range( newC -1) ', range( newC-1  )
-        print 'factorInds: ', self.factorInds
+        #print 'range( newC -1) ', range( newC-1  )
+        #print 'factorInds: ', self.factorInds
+
+        """ we update the edges of the clique tree """
         for i in range( newC -1 ):
             
             #if self.factorInds [ i ] -1 in useFactors:
-            #here was the off by onoe erorr - the values in factorInds
-            #were one-bsed, need to subtract 1
+            #there was the off by onoe erorr - the values in factorInds
+            #were one-based, need to subtract 1
             if self.factorInds [ i ] -1  in useFactors:
             
                 self.edges[ i, newC-1 ] = 1
@@ -187,13 +192,7 @@ class CliqueTree(object):
         
         
         
-        #print scope
         
-        #self.nodeList.append( scope )
-        #print self.nodeList
-        #for i in range ( len( unusedFactors) ):
-        #    print i
-        #    newmap [ unusedFactors[i]-1 ] = i+1
         
         
 
