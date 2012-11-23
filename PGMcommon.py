@@ -12,6 +12,12 @@ def getUniqueVar( factorList):
 
     return list(set().union(*[  list(f.getVar())  for f in factorList ] ))
 
+
+def isMemberBoolean (A, B):
+    """  returns an list of the same  as A containing True where the elements of A are in B and False otherwise """
+    
+    return [ x in B for x in A ]
+
 def isMember( A, B):
     """ return a python list containing  indices in B where the elements of A are located
         A and B are numpy 1-d arrays
