@@ -33,8 +33,8 @@ def createCliqueTree( factorList):
     C.setCard( cardinality )
     C.setEdges(np.zeros( (totalVars, totalVars)))
     C.setFactorList(factorList)
-    print 'length of factorList: ', len(factorList)
-    print C.toString()
+    #print 'length of factorList: ', len(factorList)
+    #print C.toString()
     cliquesConsidered = 0
 
     while cliquesConsidered < len(V):
@@ -61,16 +61,16 @@ def PruneTree ( C ):
     (nrows,ncols)=np.shape( ctree_edges )
     totalNodes=nrows
     Cnodes=C.getNodeList()
-    print 'Cnodes: ', Cnodes
+    #print 'Cnodes: ', Cnodes
     toRemove=[]
-    print range( totalNodes )
+    #print range( totalNodes )
 
     for i in range ( totalNodes ):
         if i in toRemove: continue
         #np.nonzero returns tuple, hence the [0]
         #we collect the neighbors of the ith clique
-        neighborsI= np.nonzero( ctree_edges[i,:] )[0].tolist
-        for c in range ( len(neigborsI) ):
+        neighborsI = np.nonzero ( ctree_edges[i,:] )[0].tolist()
+        for c in range ( len(neighborsI) ):
             j= neighborsI[c]
             assert ( i != j), 'i cannot equal j: PruneTree'
             if j in toRemove: continue
@@ -94,7 +94,7 @@ def PruneTree ( C ):
     Cnodes=[ item for item in Cnodes if len(item) > 0 ]
     ctree_edges= ctree_edges[np.ix_(toKeep, toKeep)]
 
-    C.setNodeList( cNodes )
+    C.setNodeList( Cnodes )
     C.setEdges( ctree_edges )
 
     #return the pruned tree with the updated nodes and edges
