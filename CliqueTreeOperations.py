@@ -2,7 +2,10 @@ import numpy as np
 from CliqueTree import *
 
 def createCliqueTree( factorList):
-    """ return a Clique Tree object given a list of factors """
+    """ return a Clique Tree object given a list of factors
+        it peforms VE and returns the clique tree the VE
+        ordering defines. See Chapter 9 of Friedman and Koller
+        Probabilistic Graphical Models"""
 
     V=getUniqueVar(factorList)
     totalVars=len(V)
@@ -47,6 +50,52 @@ def createCliqueTree( factorList):
         edges, factorList=C.eliminateVar(bestClique, edges, factorList)
 
     return C
-# <codecell>
 
 
+def PruneTree ( C ):
+    """ prune a clique tree by determing if neighboring cliques are 
+        supersets of each other. E.g.: [A,B,E] -- [A,B] -- [A,D] 
+        pruned: [A,B,E] -- [A,D] """
+
+    ctree_edges=C.getEdges()
+    (nrows,ncols)=np.shape( ctree_edges )
+    totalNodes=nrows
+    Cnodes=C.getNodeList()
+    print 'Cnodes: ', Cnodes
+    toRemove=[]
+    print range( totalNodes )
+
+    for i in range ( totalNodes ):
+        if i in toRemove: continue
+        #np.nonzero returns tuple, hence the [0]
+        #we collect the neighbors of the ith clique
+        neighborsI= np.nonzero( ctree_edges[i,:] )[0].tolist
+        for c in range ( len(neigborsI) ):
+            j= neighborsI[c]
+            assert ( i != j), 'i cannot equal j: PruneTree'
+            if j in toRemove: continue
+            #here is where we look for superset neighboring nodes in the CTree
+            if sum (  [ x in Cnodes[j] for x in Cnodes[i] ]  ) == len( Cnodes[i] ):
+                for nk in neighborsI:
+                    cnodes_i = set ( Cnodes[i] )
+                    cnodes_nk= set ( Cnodes[nk] )
+                    if len( list ( set.intersection( cnodes_i, cnodes_nk) ) ) == len (Cnodes[i]):
+                        neighborsI_set=set( neighborsI )
+                        nk_set=set( [nk] )
+                        ctree_edges [ list( neighborsI_set - nk_set ), nk ] = 1
+                        ctree_edges [  nk, list( neighborsI_set - nk_set )] = 1
+                        break
+                ctree_edges[i,:]=0
+                ctree_edges[:,i]=0
+                toRemove.append(i)
+    toKeep =  list ( set ( range( totalNodes ) ) - set ( toRemove ) )
+    for indx in toRemove:
+        Cnodes[indx]=[]
+    Cnodes=[ item for item in Cnodes if len(item) > 0 ]
+    ctree_edges= ctree_edges[np.ix_(toKeep, toKeep)]
+
+    C.setNodeList( cNodes )
+    C.setEdges( ctree_edges )
+
+    #return the pruned tree with the updated nodes and edges
+    return C
