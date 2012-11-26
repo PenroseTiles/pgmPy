@@ -96,6 +96,8 @@ class PhenotypeGivenGenotypeFactor(object):
         return self.phenotypeFactor.getCard()
     def getVal(self):
         return self.phenotypeFactor.getVal()
+    def setVal(self,val):
+        self.phenotypeFactor.setVal(val)
 
 
     def __str__(self):
@@ -145,6 +147,8 @@ class GenotypeAlleleFreqFactor (object):
         return self.genotypeFactor.getCard()
     def getVal(self):
         return self.genotypeFactor.getVal()
+    def setVal(self,val):
+        self.genotypeFactor.setVal(val)
 
 
     def __str__(self):
@@ -202,9 +206,11 @@ class GenotypeGivenParentsFactor (object):
     def getVar(self):
         return self.genotypeFactor.getVar()
     def getCard(self):
-        return elf.genotypeFactor.getCard()
+        return self.genotypeFactor.getCard()
     def getVal(self):
         return self.genotypeFactor.getVal()
+    def setVal(self, val):
+        self.genotypeFactor.setVal(val)
 
 
     def genotypeSlice(self):
