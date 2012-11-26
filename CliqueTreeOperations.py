@@ -1,5 +1,6 @@
 import numpy as np
 from CliqueTree import *
+from FactorOperations import *
 
 def createCliqueTree( factorList):
     """ return a Clique Tree object given a list of factors
@@ -8,6 +9,7 @@ def createCliqueTree( factorList):
         Probabilistic Graphical Models"""
 
     V=getUniqueVar(factorList)
+    
     totalVars=len(V)
     cardinality=np.zeros(len(V)).tolist()
     for i in range(len(V)):
@@ -99,3 +101,19 @@ def PruneTree ( C ):
 
     #return the pruned tree with the updated nodes and edges
     return C
+
+def CliqueTreeObserveEvidence ( C, E ):
+    """ given a CliqueTree object C and list of values E, which represent evidence, update
+        the factors of the cliqueTree C to reflect the observed evidence.
+        Note that ObserveEvidence in FactorOperations assumes E is a Nx2 matrix,
+        here we build the Nx2 matrix by assuing the jth index of E is the evidence
+        for the variable j"""
+    factorList= C.getFactorList()
+    for j in range ( len (E)):
+        if E[j] > 0:
+            factorList=ObserveEvidence( factorList, np.array(np.matrix( [ j+1, E[j]] ) ) )
+    C.setFactorList(factorList)
+    #return the new CliqueTree object with the updated evidence
+    return C
+
+
