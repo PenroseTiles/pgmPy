@@ -50,12 +50,16 @@ class PhenotypeFactor (object):
         self.phenotype=phenotype
 
 
+
     def getVar(self):
         return self.phenotype.getVar()
     def getCard(self):
         return self.phenotype.getCard()
     def getVal(self):
         return self.phenotype.getVal()
+
+    def getFactor(self):
+        return self.phenotype
 
     def __str__(self):
         return self.phenotype.__str__()
@@ -98,6 +102,8 @@ class PhenotypeGivenGenotypeFactor(object):
         return self.phenotypeFactor.getVal()
     def setVal(self,val):
         self.phenotypeFactor.setVal(val)
+    def getFactor(self):
+        return self.phenotypeFactor
 
 
     def __str__(self):
@@ -149,6 +155,8 @@ class GenotypeAlleleFreqFactor (object):
         return self.genotypeFactor.getVal()
     def setVal(self,val):
         self.genotypeFactor.setVal(val)
+    def getFactor(self):
+        return self.genotypeFactor
 
 
     def __str__(self):
@@ -212,7 +220,8 @@ class GenotypeGivenParentsFactor (object):
     def setVal(self, val):
         self.genotypeFactor.setVal(val)
 
-
+    def getFactor(self):
+        return self.genotypeFactor
     def genotypeSlice(self):
         pass
         #see this http://stackoverflow.com/q/4257394/1735942
@@ -272,6 +281,8 @@ class ChildCopyGivenParentalsFactor(object):
         return self.geneCopyFactor.getCard()
     def getVal(self):
         return self.geneCopyFactor.getVal()
+    def getFactor(self):
+        return self.geneCopyFactor
     def __str__(self):
         return self.geneCopyFactor.__str__()
   
@@ -297,6 +308,8 @@ class ChildCopyGivenFreqFactor(object):
         return self.geneCopyFactor.getCard()
     def getVal(self):
         return self.geneCopyFactor.getVal()
+    def getFactor(self):
+        return self.genCopyFactor
     def __str__(self):
         return self.geneCopyFactor.__str__()
 
@@ -342,6 +355,8 @@ class phenotypeGivenHaplotypesFactor(object):
         return self.phenotypeFactor.getCard()
     def getVal(self):
         return self.phenotypeFactor.getVal()
+    def getFactor(self):
+        return self.phenotypeFactor
     def __str__(self):
         return self.phenotypeFactor.__str__()
 
