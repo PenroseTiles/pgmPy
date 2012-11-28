@@ -117,3 +117,40 @@ def CliqueTreeObserveEvidence ( C, E ):
     return C
 
 
+def CliqueTreeInitialPotential( C ):
+    """ given a tree, calculate the initial potentials for each of the cliques """
+
+    N= C.getNodeCount()
+    totalFactorCount=C.getFactorCount()
+
+    nodeList=C.getNodeList()
+    factorList=C.getFactorList()
+
+    cliqueList=[ Factor( [], [], [], str(i) )  for i in range(N)  ]
+    edges=np.zeros( (N,N) )
+
+    """ First assign the factors to appropriate cliques
+    based on the skeleton cliqueTree cTree"""
+
+    factorsUsed=np.zeros( totalFactorCount, dtype=int).tolist()
+
+    for i in range(N):
+        cliqueList[i].setVar( nodeList[i] )
+        F=[]
+        k=0
+        for j in range( len(factorList) ):
+            if len( factorList[j].getVar().tolist() ) == len ( list( set.intersection ( set(cliqueList[i].getVar().tolist() ), set( factorList[j].getVar().tolist() ) ) ) ):
+        
+                if factorsUsed[j] == 0:
+                    F.append( factorList[j] )
+                    factorsUsed[j] = 1
+    #print F
+        F= [ f.getFactor() for f in F ]
+        cliqueList[i]=ComputeJointDistribution ( F )
+
+    C.setNodeList(cliqueList)
+
+    return C
+
+
+
