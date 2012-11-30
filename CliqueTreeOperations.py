@@ -118,7 +118,8 @@ def CliqueTreeObserveEvidence ( C, E ):
 
 
 def CliqueTreeInitialPotential( C ):
-    """ given a tree, calculate the initial potentials for each of the cliques """
+    """ given a tree, calculate the initial potentials for each of the cliques
+        the factors in the updated clique list are FActor objects"""
 
     N= C.getNodeCount()
     totalFactorCount=C.getFactorCount()
@@ -127,7 +128,7 @@ def CliqueTreeInitialPotential( C ):
     factorList=C.getFactorList()
 
     cliqueList=[ Factor( [], [], [], str(i) )  for i in range(N)  ]
-    edges=np.zeros( (N,N) )
+    #edges=np.zeros( (N,N) )
 
     """ First assign the factors to appropriate cliques
     based on the skeleton cliqueTree cTree"""
@@ -137,7 +138,7 @@ def CliqueTreeInitialPotential( C ):
     for i in range(N):
         cliqueList[i].setVar( nodeList[i] )
         F=[]
-        k=0
+        
         for j in range( len(factorList) ):
             if len( factorList[j].getVar().tolist() ) == len ( list( set.intersection ( set(cliqueList[i].getVar().tolist() ), set( factorList[j].getVar().tolist() ) ) ) ):
         
@@ -151,6 +152,60 @@ def CliqueTreeInitialPotential( C ):
     C.setNodeList(cliqueList)
 
     return C
+
+def getNextClique(P, messages):
+
+    """ we need to come up wih a proper message passing order. A clique is ready to pass
+        messages upward once its recieved all downstream messages from its neighbor (and vice versa)
+        its ready to transmit downstream once it recieves all its upstream messages
+
+        the ith clique C_i is ready to transmit to its neighbor C_j when C_i recieves all its
+        messages from neigbors except C_j. In cTree message passing, each message is passed
+        once.  To get the process started we start with our initial potential cTree, P
+        and an empty matrix of factors, representing messages passed between the nodes on the clique
+        tree """
+    i=j=-1
+    edges=P.getEdges()
+    print edges
+    (nrow, ncol) = np.shape(edges)
+
+    for r in range(nrow):
+        
+        #we want to ignore nodes with only one neighbor
+        #becuae they are ready to pass messages
+        if np.sum(edges[r,:] ) == 1:
+            continue 
+
+        foundmatch=0
+
+        for c in range(ncol):
+            if  edges[r,c] == 1 and messages[r,c].getVarCount()  == 0:
+                #list of indices indicating neighbors or r
+                print 'r,c: ', r, ' ', c, edges[r,c]
+                Nbs=np.nonzero(edges[:,r])[0]
+                print 'Nbs before:', Nbs
+                Nbs=Nbs[np.nonzero(Nbs!= c)[0]]
+                print 'Nbs after: ', Nbs
+                allnbmp=1 #neighbors messages passed?
+                
+                #find all of r's neighbors have sent messages *to* r
+                for z in range( len(Nbs) ):
+                    print messages[Nbs[z],r].getVarCount()
+                    if messages[ Nbs[z],r].getVarCount()  == 0:
+                        allnbmp=0
+
+                if allnbmp == 1:
+                    foundmatch=1
+                    break
+        print
+        if foundmatch==1:
+            sys.stderr.write("found match!\n")
+            i=r
+            j=c
+            break
+        print
+    return (i,j)
+
 
 
 
