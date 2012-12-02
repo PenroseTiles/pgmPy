@@ -166,7 +166,7 @@ def getNextClique(P, messages):
         tree """
     i=j=-1
     edges=P.getEdges()
-    print edges
+    #print edges
     (nrow, ncol) = np.shape(edges)
 
     for r in range(nrow):
@@ -181,16 +181,17 @@ def getNextClique(P, messages):
         for c in range(ncol):
             if  edges[r,c] == 1 and messages[r,c].getVarCount()  == 0:
                 #list of indices indicating neighbors or r
-                print 'r,c: ', r, ' ', c, edges[r,c]
+                #print 'r,c: ', r, ' ', c
+                #print 'edges[r,c]: ', edges[r,c]
                 Nbs=np.nonzero(edges[:,r])[0]
-                print 'Nbs before:', Nbs
+                #print 'Nbs before:', Nbs
                 Nbs=Nbs[np.nonzero(Nbs!= c)[0]]
-                print 'Nbs after: ', Nbs
+                #print 'Nbs after: ', Nbs
                 allnbmp=1 #neighbors messages passed?
                 
                 #find all of r's neighbors have sent messages *to* r
                 for z in range( len(Nbs) ):
-                    print messages[Nbs[z],r].getVarCount()
+                    #print messages[Nbs[z],r].getVarCount()
                     if messages[ Nbs[z],r].getVarCount()  == 0:
                         allnbmp=0
 
@@ -199,7 +200,7 @@ def getNextClique(P, messages):
                     break
         print
         if foundmatch==1:
-            sys.stderr.write("found match!\n")
+            #sys.stderr.write("found match!\n")
             i=r
             j=c
             break
