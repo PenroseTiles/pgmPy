@@ -257,8 +257,40 @@ def CliqueTreeCalibrate( P, isMax=False):
             else:
                 pass
 
-    (nrow,ncol)=np.shape(MESSAGES)
-    for z in range(nrow):
-        for x in range(ncol):
+    """ now that the leaf messages are initialized, we begin with the rest of the clique tree
+    now we do a single pass to arrive at the calibrated clique tree. We depend on
+    GetNextCliques to figure out which nodes i,j pass messages to each other"""
 
-            pprint.pprint( MESSAGES[z,x])
+    while True:
+        (i,j)=getNextClique(P,MESSAGES)
+        if sum ( [ i, j] ) == 0:
+            break
+
+        """ similiar to above, we figure out the sepset and what variables to marginalize out
+        between the two cliques"""
+        marginalize=np.setdiff1d( ctree_cliqueList[i].getVar(),  ctree_cliqueList[j].getVar() ).tolist()
+        sepset=np.intersect1d( ctree_cliqueList[i].getVar(), ctree_cliqueList[j].getVar() ).tolist()
+
+        """ find all the incoming neighbors, except j """
+        Nbs=np.nonzero( ctree_edges[:,i])
+        Nbs_minusj=[ elem for elem in Nbs if elem !=  j ]
+        #see numpy for matlab users http://www.scipy.org/NumPy_for_Matlab_Users
+        # these are incoming messages to the ith clique
+        Nbsfactors=MESSAGES[np.ix_(Nbs_minusj, i)]
+
+        """ this is sum/product """
+        if isMax == 0:
+            if len(Nbsfactors) == 1
+                Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
+            else:
+                Nbsproduct=ComputeJointDistribution( Nbsfactors )
+
+            #now mulitply wiht the clique factor
+            CliqueNbsproduct=FactorProduct( Nbsproduct, ctree_cliqueList[i] )
+            CliqueMarginal= FactorMarginalization ( CliqueNbsproduct, marginalize )
+            #normalize the marginal
+            newVal=CliqueMarginal.getVal() / np.sum( CliqueMarginal.getVal().getVal() )
+            CliqueMarginal.setVal( newVal )
+            MESSAGES[i,j] = CliqueMarginal
+        else:
+            pass
