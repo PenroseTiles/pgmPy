@@ -208,5 +208,50 @@ def getNextClique(P, messages):
     return (i,j)
 
 
+def CliqueTreeCalibrate( P, isMax=False):
+    """ this function performs sum-product or max-product algorithm for clique tree calibration.
+        P is the CliqueTree object. isMax is a boolean flag that when set to True performs Max-Product
+        instead of the default Sum-Product. The function returns a calibrated clique tree in which the
+        values of the factors is set to final calibrated potentials. """
+
+    if isMax == True:
+        pass
+
+    ctree_edges=P.getEdges()
+    ctree_cliqueList=P.getNodeList()
+    N=P.getNodeCount() #Ni is the total number of nodes (cliques) in cTree
+
+    #dummyFactor=Factor( [], [], [], 'factor')
+    #set up messsages to be passed
+    #MESSAGES[i,j] represents the message going from clique i to clique j
+    #MESSAGES will be a matrix of Factor objects
+    MESSAGES=np.tile( Factor( [], [], [], 'factor'), (N,N))
+    print MESSAGES
 
 
+    """While there are ready cliques to pass messages between, keep passing
+    messages. Use GetNextCliques to find cliques to pass messages between.
+    Once you have clique i that is ready to send message to clique
+    j, compute the message and put it in MESSAGES(i,j).
+    Remember that you only need an upward pass and a downward pass."""
+
+    """ leaf nodes are ready to pass messages right away
+        so we initialize MESSAGES with leaf message factors
+        recall, a node is a leave if row sum is equal to 1"""
+    for row in range(N):
+        rowsum= np.sum( ctree_edges[i,:] )
+        if rowsum ==1 :
+            #Returns a tuple of arrays, one for each dimension, we want the first, hence the [0]
+            leafnode=np.nonzero( ctree_edges[row,:] )[0].tolist()[0]
+            #I discovered NumPy set operations http://docs.scipy.org/doc/numpy/reference/routines.set.html
+            marginalize=np.setdiff( ctree_cliqueList[row].getVar(),  ctree_cliqueList[leafnode].getVar() ).tolist()
+            sepset=np.intersect1d( ctree_cliqueList[row], ctree_cliqueList[leafnode].getVar() ).tolist()
+
+            """ if isMax, this is sumproduct, so we do factor marginalization """
+            if isMax == 0:
+                #MESSAGES(row,leafnode)=FactorMarginalization(P.cliqueList(row),marginalize);
+                MESSAGES[row,leafnode]=FactorMarginalization(ctree_cliqueList[row], marginalize )
+                if np.sum( MESSAGES[row,leafnode].getVal() ) != 1:
+                    newVal=MESSAGES[row,leafnode].getVal() / np.sum( MESSAGES[row,leafnode].getVal() )
+                    MESSAGES[row,leafnode].setVal(newVal)
+                #need to test FactorMarginalization ...
