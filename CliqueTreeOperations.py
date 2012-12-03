@@ -293,4 +293,23 @@ def CliqueTreeCalibrate( P, isMax=False):
             CliqueMarginal.setVal( newVal )
             MESSAGES[i,j] = CliqueMarginal
         else:
+           pass
+
+      """ once out the while True loop, the clique tree has been calibrated
+      here is where we compute final belifs (potentials) for the cliques and place them in """
+
+    for i in range ( len(ctree_cliqueList)):
+        Nbs=np.nonzero( ctree_edges[:,i])
+        Nbsfactors=MESSAGES[np.ix_(Nbs, i)]
+
+        if isMax == 0:
+            if len(Nbsfactors) == 1:
+                Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
+            else:
+                Nbsproduct=ComputeJointDistribution ( Nbsfactors)
+            CliqueNbsFactors=FactorProduct(Nbsproduct, ctree_cliqueList[i])
+            ctree_cliqueList[i].setVal( CliqueNbsFactors.getVal() )
+        else:
             pass
+
+
