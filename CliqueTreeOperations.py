@@ -1,7 +1,7 @@
 import numpy as np
 from CliqueTree import *
 from FactorOperations import *
-
+import pprint
 def createCliqueTree( factorList):
     """ return a Clique Tree object given a list of factors
         it peforms VE and returns the clique tree the VE
@@ -226,7 +226,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     #MESSAGES[i,j] represents the message going from clique i to clique j
     #MESSAGES will be a matrix of Factor objects
     MESSAGES=np.tile( Factor( [], [], [], 'factor'), (N,N))
-    print MESSAGES
+
 
 
     """While there are ready cliques to pass messages between, keep passing
@@ -239,13 +239,13 @@ def CliqueTreeCalibrate( P, isMax=False):
         so we initialize MESSAGES with leaf message factors
         recall, a node is a leave if row sum is equal to 1"""
     for row in range(N):
-        rowsum= np.sum( ctree_edges[i,:] )
+        rowsum= np.sum( ctree_edges[row,:] )
         if rowsum ==1 :
             #Returns a tuple of arrays, one for each dimension, we want the first, hence the [0]
             leafnode=np.nonzero( ctree_edges[row,:] )[0].tolist()[0]
             #I discovered NumPy set operations http://docs.scipy.org/doc/numpy/reference/routines.set.html
-            marginalize=np.setdiff( ctree_cliqueList[row].getVar(),  ctree_cliqueList[leafnode].getVar() ).tolist()
-            sepset=np.intersect1d( ctree_cliqueList[row], ctree_cliqueList[leafnode].getVar() ).tolist()
+            marginalize=np.setdiff1d( ctree_cliqueList[row].getVar(),  ctree_cliqueList[leafnode].getVar() ).tolist()
+            sepset=np.intersect1d( ctree_cliqueList[row].getVar(), ctree_cliqueList[leafnode].getVar() ).tolist()
 
             """ if isMax, this is sumproduct, so we do factor marginalization """
             if isMax == 0:
@@ -254,4 +254,11 @@ def CliqueTreeCalibrate( P, isMax=False):
                 if np.sum( MESSAGES[row,leafnode].getVal() ) != 1:
                     newVal=MESSAGES[row,leafnode].getVal() / np.sum( MESSAGES[row,leafnode].getVal() )
                     MESSAGES[row,leafnode].setVal(newVal)
-                #need to test FactorMarginalization ...
+            else:
+                pass
+
+    (nrow,ncol)=np.shape(MESSAGES)
+    for z in range(nrow):
+        for x in range(ncol):
+
+            pprint.pprint( MESSAGES[z,x])
