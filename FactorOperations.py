@@ -180,7 +180,6 @@ def FactorProduct ( A, B):
     assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() ) #get the assignment of values of C
     indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1 # re-arrange the assignment of C, to what it would be in factor  A
     indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1 # re-arange the assignment of C to what it would be in  factorB
-    
     c_val=A.getVal()[indxA.flatten().tolist()] * B.getVal()[indxB.flatten().tolist()] #now that we have the index into A.val and B.val vector, multiply them to factor product
     C.setVal ( c_val.tolist() )
 
@@ -368,6 +367,10 @@ def ComputeMarginal(V, F, E):
 
     return FactorMarginalization ( jointE, v)
     
+
+def IdentityFactor( F ):
+    return Factor ( F.getVar().tolist(), F.getCard().tolist(), np.ones( np.prod( F.getCard() ) ), F.getName()+ '_identity' )
+
 
 
 
