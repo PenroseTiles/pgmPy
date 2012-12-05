@@ -1,7 +1,7 @@
 import numpy as np
 from CliqueTree import *
 from FactorOperations import *
-import pprint
+
 def createCliqueTree( factorList):
     """ return a Clique Tree object given a list of factors
         it peforms VE and returns the clique tree the VE
@@ -198,13 +198,13 @@ def getNextClique(P, messages):
                 if allnbmp == 1:
                     foundmatch=1
                     break
-        print
+        
         if foundmatch==1:
             #sys.stderr.write("found match!\n")
             i=r
             j=c
             break
-        print
+       
     return (i,j)
 
 
@@ -218,6 +218,7 @@ def CliqueTreeCalibrate( P, isMax=False):
         pass
 
     ctree_edges=P.getEdges()
+    
     ctree_cliqueList=P.getNodeList()
     N=P.getNodeCount() #Ni is the total number of nodes (cliques) in cTree
 
@@ -257,13 +258,20 @@ def CliqueTreeCalibrate( P, isMax=False):
             else:
                 pass
 
+    (mrow,mcol)=np.shape(MESSAGES)
+    for m in range(mrow):
+        for n in range(mcol):
+            print 'm: ', m, " n: ", n
+            print MESSAGES[m,n]
+            print
+        print "=="
     """ now that the leaf messages are initialized, we begin with the rest of the clique tree
     now we do a single pass to arrive at the calibrated clique tree. We depend on
     GetNextCliques to figure out which nodes i,j pass messages to each other"""
 
     while True:
         (i,j)=getNextClique(P,MESSAGES)
-        if sum ( [ i, j] ) == 0:
+        if sum ( [ i, j] ) == -2:
             break
 
         """ similiar to above, we figure out the sepset and what variables to marginalize out
@@ -272,15 +280,16 @@ def CliqueTreeCalibrate( P, isMax=False):
         sepset=np.intersect1d( ctree_cliqueList[i].getVar(), ctree_cliqueList[j].getVar() ).tolist()
 
         """ find all the incoming neighbors, except j """
-        Nbs=np.nonzero( ctree_edges[:,i])
+        Nbs=np.nonzero( ctree_edges[:,i])[0] #returns a tuple ...
         Nbs_minusj=[ elem for elem in Nbs if elem !=  j ]
+       
         #see numpy for matlab users http://www.scipy.org/NumPy_for_Matlab_Users
         # these are incoming messages to the ith clique
-        Nbsfactors=MESSAGES[np.ix_(Nbs_minusj, i)]
-
+        Nbsfactors=MESSAGES[np.ix_(Nbs_minusj, [i] )].flatten().tolist()
+        
         """ this is sum/product """
         if isMax == 0:
-            if len(Nbsfactors) == 1
+            if len(Nbsfactors) == 1:
                 Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
             else:
                 Nbsproduct=ComputeJointDistribution( Nbsfactors )
@@ -289,18 +298,18 @@ def CliqueTreeCalibrate( P, isMax=False):
             CliqueNbsproduct=FactorProduct( Nbsproduct, ctree_cliqueList[i] )
             CliqueMarginal= FactorMarginalization ( CliqueNbsproduct, marginalize )
             #normalize the marginal
-            newVal=CliqueMarginal.getVal() / np.sum( CliqueMarginal.getVal().getVal() )
+            newVal=CliqueMarginal.getVal() / np.sum( CliqueMarginal.getVal() )
             CliqueMarginal.setVal( newVal )
             MESSAGES[i,j] = CliqueMarginal
         else:
            pass
 
-      """ once out the while True loop, the clique tree has been calibrated
-      here is where we compute final belifs (potentials) for the cliques and place them in """
+    """ once out the while True loop, the clique tree has been calibrated
+    here is where we compute final belifs (potentials) for the cliques and place them in """
 
     for i in range ( len(ctree_cliqueList)):
-        Nbs=np.nonzero( ctree_edges[:,i])
-        Nbsfactors=MESSAGES[np.ix_(Nbs, i)]
+        Nbs=np.nonzero( ctree_edges[:,i])[0]#returns a tuple
+        Nbsfactors=MESSAGES[np.ix_(Nbs, [i])].flatten().tolist()
 
         if isMax == 0:
             if len(Nbsfactors) == 1:
@@ -312,4 +321,16 @@ def CliqueTreeCalibrate( P, isMax=False):
         else:
             pass
 
+    P.setNodeList( ctree_cliqueList )
+    np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
+    
+    for k in range(len(ctree_cliqueList)):
+        print 'k: ', k
+        print ctree_cliqueList[k]
+        #IndexToAssignment(1:prod(P.cliqueList(1).card), P.cliqueList(1).card)
+        I=np.arange(np.prod( ctree_cliqueList[k].getCard()  ))
+        print IndexToAssignment( I, ctree_cliqueList[k].getCard()  )
+        print "=="
+
+    return P
 
