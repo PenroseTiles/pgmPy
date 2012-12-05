@@ -213,6 +213,7 @@ def CliqueTreeCalibrate( P, isMax=False):
         P is the CliqueTree object. isMax is a boolean flag that when set to True performs Max-Product
         instead of the default Sum-Product. The function returns a calibrated clique tree in which the
         values of the factors is set to final calibrated potentials. """
+    np.set_printoptions(suppress=True)
 
     if isMax == True:
         pass
@@ -227,8 +228,8 @@ def CliqueTreeCalibrate( P, isMax=False):
     #MESSAGES[i,j] represents the message going from clique i to clique j
     #MESSAGES will be a matrix of Factor objects
     MESSAGES=np.tile( Factor( [], [], [], 'factor'), (N,N))
-
-
+    DUMMY=np.reshape( np.arange(N*N)+1, (N,N) )
+    print DUMMY
 
     """While there are ready cliques to pass messages between, keep passing
     messages. Use GetNextCliques to find cliques to pass messages between.
@@ -258,22 +259,16 @@ def CliqueTreeCalibrate( P, isMax=False):
             else:
                 pass
 
-    (mrow,mcol)=np.shape(MESSAGES)
-    for m in range(mrow):
-        for n in range(mcol):
-            print 'm: ', m, " n: ", n
-            print MESSAGES[m,n]
-            print
-        print "=="
+    
     """ now that the leaf messages are initialized, we begin with the rest of the clique tree
     now we do a single pass to arrive at the calibrated clique tree. We depend on
     GetNextCliques to figure out which nodes i,j pass messages to each other"""
-
+    
     while True:
         (i,j)=getNextClique(P,MESSAGES)
         if sum ( [ i, j] ) == -2:
             break
-
+        print 'i: ', i, 'j: ', j
         """ similiar to above, we figure out the sepset and what variables to marginalize out
         between the two cliques"""
         marginalize=np.setdiff1d( ctree_cliqueList[i].getVar(),  ctree_cliqueList[j].getVar() ).tolist()
@@ -282,18 +277,23 @@ def CliqueTreeCalibrate( P, isMax=False):
         """ find all the incoming neighbors, except j """
         Nbs=np.nonzero( ctree_edges[:,i])[0] #returns a tuple ...
         Nbs_minusj=[ elem for elem in Nbs if elem !=  j ]
-       
+        #print 'Nbs_minusj: ', Nbs_minusj, ' [i]: ', [i]
         #see numpy for matlab users http://www.scipy.org/NumPy_for_Matlab_Users
         # these are incoming messages to the ith clique
         Nbsfactors=MESSAGES[np.ix_(Nbs_minusj, [i] )].flatten().tolist()
-        
+        print DUMMY[np.ix_(Nbs_minusj, [i] )].flatten()
         """ this is sum/product """
         if isMax == 0:
+            print 'total number of Nbs factors: ', len(Nbsfactors)
             if len(Nbsfactors) == 1:
                 Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
             else:
                 Nbsproduct=ComputeJointDistribution( Nbsfactors )
-
+            #val=Nbsproduct.getVal()
+            #rowcount=len(val)/3
+            #print Nbsproduct.getVar()
+            #print Nbsproduct.getCard()
+            #print np.reshape( val, (rowcount,3))
             #now mulitply wiht the clique factor
             CliqueNbsproduct=FactorProduct( Nbsproduct, ctree_cliqueList[i] )
             CliqueMarginal= FactorMarginalization ( CliqueNbsproduct, marginalize )
@@ -303,7 +303,7 @@ def CliqueTreeCalibrate( P, isMax=False):
             MESSAGES[i,j] = CliqueMarginal
         else:
            pass
-
+        print
     """ once out the while True loop, the clique tree has been calibrated
     here is where we compute final belifs (potentials) for the cliques and place them in """
 
@@ -323,7 +323,7 @@ def CliqueTreeCalibrate( P, isMax=False):
 
     P.setNodeList( ctree_cliqueList )
     np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
-    
+    return P
     for k in range(len(ctree_cliqueList)):
         print 'k: ', k
         print ctree_cliqueList[k]
