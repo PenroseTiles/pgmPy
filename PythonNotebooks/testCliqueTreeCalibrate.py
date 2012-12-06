@@ -6,6 +6,7 @@ from FactorOperations import *
 import scipy.io as sio
 import numpy as np
 import pprint
+import pdb
 matfile='/Users/amit/BC_Classes/PGM/Prog4/PA4Sample.mat'
 mat_contents=sio.loadmat(matfile)
 mat_struct=mat_contents['SumProdCalibrate']
@@ -19,4 +20,8 @@ for tpl in input_cliqueList:
     clique_list_factorObj.append(f)
 
 P=CliqueTree( clique_list_factorObj ,  input_edges, clique_list_factorObj, [])
-CliqueTreeCalibrate(P)
+
+P=CliqueTreeCalibrate(P)
+for f in P.getNodeList():
+    print f
+    print "=="
