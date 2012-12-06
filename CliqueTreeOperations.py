@@ -1,7 +1,7 @@
 import numpy as np
 from CliqueTree import *
 from FactorOperations import *
-
+import pdb
 def createCliqueTree( factorList):
     """ return a Clique Tree object given a list of factors
         it peforms VE and returns the clique tree the VE
@@ -281,7 +281,9 @@ def CliqueTreeCalibrate( P, isMax=False):
         #see numpy for matlab users http://www.scipy.org/NumPy_for_Matlab_Users
         # these are incoming messages to the ith clique
         Nbsfactors=MESSAGES[np.ix_(Nbs_minusj, [i] )].flatten().tolist()
-        print DUMMY[np.ix_(Nbs_minusj, [i] )].flatten()
+        #print DUMMY[np.ix_(Nbs_minusj, [i] )].flatten()
+        #for f in Nbsfactors:
+            #print f
         """ this is sum/product """
         if isMax == 0:
             print 'total number of Nbs factors: ', len(Nbsfactors)
@@ -289,21 +291,27 @@ def CliqueTreeCalibrate( P, isMax=False):
                 Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
             else:
                 Nbsproduct=ComputeJointDistribution( Nbsfactors )
+            #pdb.set_trace()
             #val=Nbsproduct.getVal()
             #rowcount=len(val)/3
             #print Nbsproduct.getVar()
             #print Nbsproduct.getCard()
             #print np.reshape( val, (rowcount,3))
             #now mulitply wiht the clique factor
+            
             CliqueNbsproduct=FactorProduct( Nbsproduct, ctree_cliqueList[i] )
+            
             CliqueMarginal= FactorMarginalization ( CliqueNbsproduct, marginalize )
+            
             #normalize the marginal
             newVal=CliqueMarginal.getVal() / np.sum( CliqueMarginal.getVal() )
+
             CliqueMarginal.setVal( newVal )
+            
             MESSAGES[i,j] = CliqueMarginal
         else:
            pass
-        print
+        #print
     """ once out the while True loop, the clique tree has been calibrated
     here is where we compute final belifs (potentials) for the cliques and place them in """
 
@@ -316,21 +324,24 @@ def CliqueTreeCalibrate( P, isMax=False):
                 Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
             else:
                 Nbsproduct=ComputeJointDistribution ( Nbsfactors)
-            CliqueNbsFactors=FactorProduct(Nbsproduct, ctree_cliqueList[i])
-            ctree_cliqueList[i].setVal( CliqueNbsFactors.getVal() )
+            
+            CliqueNbsProduct=FactorProduct(Nbsproduct, ctree_cliqueList[i])
+            #pdb.set_trace()
+            ctree_cliqueList[i].setVal( CliqueNbsProduct.getVal() )
         else:
             pass
 
+    
     P.setNodeList( ctree_cliqueList )
     np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
     return P
-    for k in range(len(ctree_cliqueList)):
-        print 'k: ', k
-        print ctree_cliqueList[k]
+    #for k in range(len(ctree_cliqueList)):
+    #    print 'k: ', k
+    #    print ctree_cliqueList[k]
         #IndexToAssignment(1:prod(P.cliqueList(1).card), P.cliqueList(1).card)
-        I=np.arange(np.prod( ctree_cliqueList[k].getCard()  ))
-        print IndexToAssignment( I, ctree_cliqueList[k].getCard()  )
-        print "=="
+    #    I=np.arange(np.prod( ctree_cliqueList[k].getCard()  ))
+    #    print IndexToAssignment( I, ctree_cliqueList[k].getCard()  )
+    #    print "=="
 
     return P
 
