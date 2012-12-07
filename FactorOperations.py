@@ -3,7 +3,7 @@ from Factor import *
 import numpy as np
 from PGMcommon import *
 import sys
-
+import pdb
 
 
 def IndexToAssignment( I, D):
@@ -139,10 +139,12 @@ def FactorProduct ( A, B):
 
 
     #check of  variables that in both A and B have the same cardinality
-    setA= set( A.getVar() )
-    setB= set( B.getVar() )
-    intersect=np.array( list( setA.intersection(setB)))
-
+    #print 'A.getVar():  ', A.getVar()
+    #print 'B.getVar(): ',B.getVar()
+    #setA= set( A.getVar() )
+    #setB= set( B.getVar() )
+    #intersect=np.array( list( setA.intersection(setB)))
+    intersect=np.intersect1d( A.getVar(), B.getVar() ).tolist()
     #print "Intersection of variables in FactorProduct ", intersect
     #print "A var: ",  A.getVar()
     #print "B var: ",  B.getVar()
@@ -164,9 +166,15 @@ def FactorProduct ( A, B):
             sys.exit(1)
 
     #now set the variables of C to the union of variables in factors A and B
-    C.setVar ( list( setA.union(setB) ) )
+    #print 'setA ' ,setA
+    #print 'setB ', setB
+    #print list( setA.union(setB) )
+    C.setVar( np.union1d ( A.getVar(), B.getVar() ).tolist()  )
+    #C.setVar ( list( setA.union(setB) ) )
     mapA=isMember(A.getVar(), C.getVar() )
     mapB=isMember(B.getVar(), C.getVar() )
+
+    
 
     #Set the cardinality of variables in C
     C.setCard( np.zeros( len(C.getVar())).tolist() )
@@ -180,6 +188,9 @@ def FactorProduct ( A, B):
     assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() ) #get the assignment of values of C
     indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1 # re-arrange the assignment of C, to what it would be in factor  A
     indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1 # re-arange the assignment of C to what it would be in  factorB
+
+    
+
     c_val=A.getVal()[indxA.flatten().tolist()] * B.getVal()[indxB.flatten().tolist()] #now that we have the index into A.val and B.val vector, multiply them to factor product
     C.setVal ( c_val.tolist() )
 
