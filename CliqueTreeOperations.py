@@ -327,7 +327,7 @@ def CliqueTreeCalibrate( P, isMax=False):
             
             CliqueNbsProduct=FactorProduct(Nbsproduct, ctree_cliqueList[i])
             #pdb.set_trace()
-            ctree_cliqueList[i].setVal( CliqueNbsProduct.getVal() )
+            ctree_cliqueList[i]=CliqueNbsProduct
         else:
             pass
 
