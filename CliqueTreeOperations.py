@@ -146,7 +146,8 @@ def CliqueTreeInitialPotential( C ):
                     F.append( factorList[j] )
                     factorsUsed[j] = 1
     #print F
-        F= [ f.getFactor() for f in F ]
+        #pdb.set_trace()
+        #F= [ f.getFactor() for f in F ]
         cliqueList[i]=ComputeJointDistribution ( F )
 
     C.setNodeList(cliqueList)
@@ -221,6 +222,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     ctree_edges=P.getEdges()
     
     ctree_cliqueList=P.getNodeList()
+    
     N=P.getNodeCount() #Ni is the total number of nodes (cliques) in cTree
 
     #dummyFactor=Factor( [], [], [], 'factor')
@@ -229,7 +231,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     #MESSAGES will be a matrix of Factor objects
     MESSAGES=np.tile( Factor( [], [], [], 'factor'), (N,N))
     DUMMY=np.reshape( np.arange(N*N)+1, (N,N) )
-    print DUMMY
+    
 
     """While there are ready cliques to pass messages between, keep passing
     messages. Use GetNextCliques to find cliques to pass messages between.
@@ -268,7 +270,7 @@ def CliqueTreeCalibrate( P, isMax=False):
         (i,j)=getNextClique(P,MESSAGES)
         if sum ( [ i, j] ) == -2:
             break
-        print 'i: ', i, 'j: ', j
+        #print 'i: ', i, 'j: ', j
         """ similiar to above, we figure out the sepset and what variables to marginalize out
         between the two cliques"""
         marginalize=np.setdiff1d( ctree_cliqueList[i].getVar(),  ctree_cliqueList[j].getVar() ).tolist()
@@ -286,7 +288,7 @@ def CliqueTreeCalibrate( P, isMax=False):
             #print f
         """ this is sum/product """
         if isMax == 0:
-            print 'total number of Nbs factors: ', len(Nbsfactors)
+            #print 'total number of Nbs factors: ', len(Nbsfactors)
             if len(Nbsfactors) == 1:
                 Nbsproduct=FactorProduct( Nbsfactors[0], IdentityFactor(Nbsfactors[0]) )
             else:
@@ -312,6 +314,10 @@ def CliqueTreeCalibrate( P, isMax=False):
         else:
            pass
         #print
+
+
+
+    #######################################################################
     """ once out the while True loop, the clique tree has been calibrated
     here is where we compute final belifs (potentials) for the cliques and place them in """
 
@@ -344,4 +350,42 @@ def CliqueTreeCalibrate( P, isMax=False):
     #    print "=="
 
     return P
+
+
+def CreatePrunedInitCtree(F):
+    """ 1. create cTree
+        2. prune it
+        3. compute initial potential of the tree
+        4. return it"""
+
+    #cTree = createCliqueTree(F)
+    #prunedCTree=PruneTree( cTree )
+    #P=CliqueTreeInitialPotential( prunedCTree )
+
+    #lets obfuscate a little ...
+    return CliqueTreeInitialPotential ( PruneTree ( createCliqueTree(F) ) )
+
+    #return P
+
+def ComputeExactMarginalsBP( F, E=[], isMax=False):
+    """ We take a list of Factor objects, observed Evidence E
+        and returns marignal proabilities for the variables in the
+        Bayesian network. If isMax is 1 it runs MAP inference ( *still need to
+        do this *) otherwise it runs exact inference using Sum/Product algorithm.
+        The ith element of the returned list represents the ith variable in the
+        network and its marginal prob of the variable """
+
+    MARGINALS=[]
+
+    P = CreatePrunedInitCtree(F)
+    P = CliqueTreeCalibrate(P)
+    
+    """ get the list of unique variables """
+    V=getUniqueVar(F)
+    print V
+
+    for i in range( len(V) ): #go threu each variable
+        for j in range len( P.getNodeList() ):
+            #iterate thru each clique node
+            pass
 
