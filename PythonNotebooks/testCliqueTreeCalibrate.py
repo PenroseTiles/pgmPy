@@ -22,6 +22,7 @@ for tpl in input_cliqueList:
 P=CliqueTree( clique_list_factorObj ,  input_edges, clique_list_factorObj, [])
 
 P=CliqueTreeCalibrate(P)
+
 for f in P.getNodeList():
     print f
     print "=="
