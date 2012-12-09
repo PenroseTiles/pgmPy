@@ -379,13 +379,30 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
 
     P = CreatePrunedInitCtree(F)
     P = CliqueTreeCalibrate(P)
+    cliqueList=P.getNodeList()
     
     """ get the list of unique variables """
     V=getUniqueVar(F)
-    print V
+    
 
-    for i in range( len(V) ): #go threu each variable
-        for j in range len( P.getNodeList() ):
-            #iterate thru each clique node
-            pass
+    for i in range ( len(V ) ):
+        for j in range ( len(cliqueList ) ):
+            if V[i] in cliqueList[j].getVar():
+                marginalize=np.setdiff1d ( cliqueList[j].getVar(), V[i]  )
+                if not marginalize:
+                    MARGINALS.append( cliqueList[j]  )
+                else:
+                    if isMax == 0:
+                        #mfactor=FactorMarginalization(P.cliqueList(j), marginalize);
+                        mfactor=FactorMarginalization( cliqueList[j], marginalize )
+                        newVal=mfactor.getVal() / np.sum( mfactor.getVal() )
+                        mfactor.setVal( newVal )
+                        MARGINALS.append ( mfactor )
+                    else:
+                        pass
+                break
 
+    for m in MARGINALS:
+        print m
+        print
+    return MARGINALS
