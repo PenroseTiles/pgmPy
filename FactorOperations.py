@@ -435,6 +435,39 @@ def SumProductVE ( Z, F ):
     return reduce(lambda x, y: FactorProduct(x,y), F)
 
 
+def FactorMaxMarginalization( A, V ):
+    """ computes the factor with the variables in V *maxed* out.
+        The resulting factor will have all the variables in A minus
+        those variables in V. This is quite similiar to FactorMarginalization, but rather then summing out variables in V
+        we take the max. In the code, this translates passing np.max as the function to accum
+        See section  13.2 in Koller and Friedman  for more information"""
+
+    B=Factor()
+    #check for empy factor or variable list
+    if len( A.getVar() ) == 0 or len(V) == 0:
+        return A
+    Bvar=np.setdiff1d( A.getVar(), V)
+    mapB=isMember(Bvar, A.getVar())
+
+    if len(Bvar) == 0:
+        sys.stderr.write("FactorMaxMarginalization: Error, resultant factor has empty scope...\n")
+        return None
+    #set the marginalized factor's variable scope and cardinality
+    B.setVar( Bvar.tolist() )
+    B.setCard( A.getCard()[mapB] )
+    B.setVal( np.zeros(np.prod(B.getCard())).tolist() )
+
+    #compute some helper indices
+    assignments=IndexToAssignment ( np.arange(np.prod(A.getCard()) ), A.getCard() )
+    #indxB tells which values in A to sum together when marginalizing out the variable(s) in B
+    indxB=AssignmentToIndex( assignments[:,mapB], B.getCard())-1
+
+    #here we pass in the function np.max
+    #NumPy and Python are awesome
+    max_vals=accum(indxB, A.getVal(), np.max )
+    B.setVal( max_vals.tolist() )
+
+    return B
 
 
 
