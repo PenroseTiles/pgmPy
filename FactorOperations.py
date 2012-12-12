@@ -384,6 +384,57 @@ def IdentityFactor( F ):
 
 
 
+def SumProductEliminateVar(z, factorList):
+
+    """ this is a non-graph based  sum-product VE """
+    """z is a variable to eliminate
+       pass in a list of factors
+
+       1. figure out which factor contain z in their variable scope
+       2. figure out which factors don't contain z in their scope
+       3. mulitply in all factors that have z
+       4. sum out z (marginalize) and return new factor with variable z eliminated"""
+    useFactors = []# list  of factors that contains the variable Z
+    unusedFactors=[] #list of factors that don't contain variable Z
+    scope = []
+
+    """get a list containining the index in self.factorLlist of factors
+       that contain the variable Z to be eliminated
+       get the scope of variables from the factors that contain variable Z """
+    for fi in factorList:
+        if z in fi.getVar().tolist():
+            useFactors.append(fi)#the ith factor is being currently involved in elimination
+            scope=list(set.union(set(scope), fi.getVar().tolist() ))
+        else:
+            unusedFactors.append( fi )
+
+    #for f in useFactors:
+    #    print 'useFactor: ', f
+    #print '==='
+    #for f in  unusedFactors:
+    #    print 'unusedFactor: ', f
+
+    psiFactor= ComputeJointDistribution ( useFactors )
+    tauFactor=FactorMarginalization( psiFactor,[z] )
+
+    #print 'psiFactor: ', psiFactor
+    #print 'tauFactor: ', tauFactor
+    return unusedFactors + [ tauFactor ]
+
+def SumProductVE ( Z, F ):
+
+    """ A wrapper function for SumProductEliminateVar
+        sum-product variable elimination based on pseudocode algorithm 9.1 in Koller and Friedman
+        We are giving a list of variables to eliminate in Z (in the order we want to
+        elimiinate them) and a list of factors F
+        eliminate each one getting getting the marginal distribution of the last variable in the list
+        Z. """
+
+    for z in Z:
+        F=SumProductEliminateVar(z, F)
+    return reduce(lambda x, y: FactorProduct(x,y), F)
+
+
 
 
 
