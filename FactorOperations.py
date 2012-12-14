@@ -4,6 +4,7 @@ import numpy as np
 from PGMcommon import *
 import sys
 import pdb
+import itertools
 
 
 def IndexToAssignment( I, D):
@@ -496,24 +497,43 @@ def MaxProductEliminateVar(z, factorList):
         else:
             unusedFactors.append( fi )
 
-    #for f in useFactors:
-    #    print 'useFactor: ', f
-    #print '==='
-    #for f in  unusedFactors:
-    #    print 'unusedFactor: ', f
-
+   
+    """ psiFactor is an intermediate factor, prior to max-marginalization """
     psiFactor= ComputeJointDistribution ( useFactors )
     tauFactor=FactorMaxMarginalization( psiFactor,[z] )
 
-    #print 'psiFactor: ', psiFactor
-    #print 'tauFactor: ', tauFactor
-    #intermediateFactor= reduce(lambda x, y: FactorProduct(x,y), unusedFactors + [tauFactor])
-    return unusedFactors + [ tauFactor ]
+    
+    """ we return tuple consisting of
+    1. a list factors that are unused, plus the result of max-marginal
+    such that the variable z is not eliminated from the list of factors remaining.
+    2. For traceback, we return the intermediate factor generated in the process of eliminating
+    variable z. """
+    return unusedFactors + [ tauFactor ], psiFactor
 
-def MaxDecoding ( F, Z ):
-    pass
+def MaxDecoding ( FI, Z ):
+    """ In order to return the most probable assignment from MaxProductVE
+    we take in a list of intermediate factors, FI, that were generated in the process
+    of MaxProductVE. Z is the same elimination ordering used as MaxProductVE.
+    We traceback our steps by iterating in reverse order the elimination ordering Z.
 
+    Following arguments  section 13.2.2 page 558 in Koller and Friedman, as one eliminates
+    variables you cannot determine their maximizing value. But you can compute their 'conditional'
+    maximizing value - their max value given the other variables not eliminate yet. Once
+    the last variable is eliminated, we can traceback to get the maximzing value of the remaining
+    variables. Hence the reason for iterating thru the elimination ordering Z in reverse order """
 
+    for (z, f) in itertools.izip( reversed(Z), reversed(FI) ):
+        #print z
+        #print f
+        values=f.getVal().tolist()
+
+        fidx= IndexToAssignment( np.arange( np.prod( f.getCard()  ) ), f.getCard() )
+        print fidx
+        if not np.setdiff1d( f.getVar(), [z]).tolist():
+            maxidx=values.index(max(values))
+            maxvalue=values[maxidx]
+            print fidx.flatten()[maxidx]
+        #print IndexToAssignment(np.arange( z.getCard() ), z.getCard() )
 
 def MaxProductVE ( Z, F ):
 
@@ -523,15 +543,14 @@ def MaxProductVE ( Z, F ):
         elimiinate them) and a list of factors F
         eliminate each one getting getting the marginal distribution of the last variable in the list
         Z. """
-    #intermediateMaxFactors=[]
+    intermediateMaxFactors=[]
     for z in Z:
-        F=MaxProductEliminateVar(z, F)
+        (F, intermediateFactor)=MaxProductEliminateVar(z, F)
+        intermediateMaxFactors.append ( intermediateFactor )
+       
         #intermediateMaxFactors.append ( intermediateFactor )
-    #for k in intermediateMaxFactors:
-    #    print k
-    #    print IndexToAssignment ( np.arange ( k.getCard() ), k.getCard() )
-    #    print "---"
-    #MaxDecoding( intermediateMaxFactors, Z )
+   
+    MaxDecoding( intermediateMaxFactors, Z )
     return reduce(lambda x, y: FactorProduct(x,y), F)
 
 
