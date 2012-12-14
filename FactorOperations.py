@@ -386,14 +386,15 @@ def IdentityFactor( F ):
 
 def SumProductEliminateVar(z, factorList):
 
-    """ this is a non-graph based  sum-product VE """
-    """z is a variable to eliminate
+    """ this is a non-graph based  sum-product variable elimination function
+    z is a variable to eliminate
        pass in a list of factors
 
        1. figure out which factor contain z in their variable scope
        2. figure out which factors don't contain z in their scope
        3. mulitply in all factors that have z
        4. sum out z (marginalize) and return new factor with variable z eliminated"""
+
     useFactors = []# list  of factors that contains the variable Z
     unusedFactors=[] #list of factors that don't contain variable Z
     scope = []
@@ -451,7 +452,7 @@ def FactorMaxMarginalization( A, V ):
 
     if len(Bvar) == 0:
         sys.stderr.write("FactorMaxMarginalization: Error, resultant factor has empty scope...\n")
-        return None
+        return np.max (A.getVal() )
     #set the marginalized factor's variable scope and cardinality
     B.setVar( Bvar.tolist() )
     B.setCard( A.getCard()[mapB] )
@@ -470,7 +471,149 @@ def FactorMaxMarginalization( A, V ):
     return B
 
 
+def MaxProductEliminateVar(z, factorList):
+
+    """ this is a non-graph based  MAX-product variable elimination function
+        z is a variable to eliminate
+        pass in a list of factors
+
+       1. figure out which factor contain z in their variable scope
+       2. figure out which factors don't contain z in their scope
+       3. mulitply in all factors that have z
+       4. max marginalize out z  and return new factor with variable z eliminated"""
+
+    useFactors = []# list  of factors that contains the variable Z
+    unusedFactors=[] #list of factors that don't contain variable Z
+    scope = []
+
+    """get a list containining the index in self.factorLlist of factors
+       that contain the variable Z to be eliminated
+       get the scope of variables from the factors that contain variable Z """
+    for fi in factorList:
+        if z in fi.getVar().tolist():
+            useFactors.append(fi)#the ith factor is being currently involved in elimination
+            scope=list(set.union(set(scope), fi.getVar().tolist() ))
+        else:
+            unusedFactors.append( fi )
+
+    #for f in useFactors:
+    #    print 'useFactor: ', f
+    #print '==='
+    #for f in  unusedFactors:
+    #    print 'unusedFactor: ', f
+
+    psiFactor= ComputeJointDistribution ( useFactors )
+    tauFactor=FactorMaxMarginalization( psiFactor,[z] )
+
+    #print 'psiFactor: ', psiFactor
+    #print 'tauFactor: ', tauFactor
+    #intermediateFactor= reduce(lambda x, y: FactorProduct(x,y), unusedFactors + [tauFactor])
+    return unusedFactors + [ tauFactor ]
+
+def MaxDecoding ( F, Z ):
+    pass
 
 
 
+def MaxProductVE ( Z, F ):
 
+    """ A wrapper function for MaxProductEliminateVar
+        sum-product variable elimination based on pseudocode algorithm 9.1 in Koller and Friedman
+        We are giving a list of variables to eliminate in Z (in the order we want to
+        elimiinate them) and a list of factors F
+        eliminate each one getting getting the marginal distribution of the last variable in the list
+        Z. """
+    #intermediateMaxFactors=[]
+    for z in Z:
+        F=MaxProductEliminateVar(z, F)
+        #intermediateMaxFactors.append ( intermediateFactor )
+    #for k in intermediateMaxFactors:
+    #    print k
+    #    print IndexToAssignment ( np.arange ( k.getCard() ), k.getCard() )
+    #    print "---"
+    #MaxDecoding( intermediateMaxFactors, Z )
+    return reduce(lambda x, y: FactorProduct(x,y), F)
+
+
+def FactorSum ( A, B):
+    """ FactorSum Computes the sum of two factors.
+%       Similiar to FactorProduct
+        We would use this in log space where multiplication becomes addition
+%       Based on the code here https://github.com/indapa/PGM/blob/master/Prog4/FactorSum.m """
+
+
+    C=Factor()
+
+   #check for empty factors
+    if len( A.getVar() ) == 0 :
+        sys.stderr.write("A factor is empty!\n")
+        return B
+    if len( B.getVar() ) == 0:
+        sys.stderr.write("B factor is empty!\n")
+        return A
+
+
+    #check of  variables that in both A and B have the same cardinality
+    #print 'A.getVar():  ', A.getVar()
+    #print 'B.getVar(): ',B.getVar()
+    #setA= set( A.getVar() )
+    #setB= set( B.getVar() )
+    #intersect=np.array( list( setA.intersection(setB)))
+    intersect=np.intersect1d( A.getVar(), B.getVar() ).tolist()
+    #print "Intersection of variables in FactorProduct ", intersect
+    #print "A var: ",  A.getVar()
+    #print "B var: ",  B.getVar()
+
+    #if the intersection of variables in the two factors
+    #is non-zero, then make sure they have the same cardinality
+    if len(intersect) > 0:
+        #iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
+        iA=getIndex( A.getVar(), intersect )
+        #print "iA: ", iA
+        #iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
+        iB = getIndex (  B.getVar(), intersect )
+        #print "iB: ", iB
+
+        # check to see if any of the comparisons in the  array resulting from  of a.getCard()[iA] == b.getCard()[iB]
+        # are all False. If so print an error and exit
+        if len( np.where( A.getCard()[iA].all() == B.getCard()[iB].all() ==False)[0].tolist() ) > 0:
+            sys.stderr.write("dimensionality mismatch in factors!\n")
+            sys.exit(1)
+
+    #now set the variables of C to the union of variables in factors A and B
+    #print 'setA ' ,setA
+    #print 'setB ', setB
+    #print list( setA.union(setB) )
+    C.setVar( np.union1d ( A.getVar(), B.getVar() ).tolist()  )
+    #C.setVar ( list( setA.union(setB) ) )
+    mapA=isMember(A.getVar(), C.getVar() )
+    mapB=isMember(B.getVar(), C.getVar() )
+
+
+
+    #Set the cardinality of variables in C
+    C.setCard( np.zeros( len(C.getVar())).tolist() )
+    C.getCard()[mapA]=A.getCard()
+    C.getCard()[mapB]=B.getCard()
+
+    #intitialize the values of the factor C to be zero
+    C.setVal( np.zeros(np.prod(C.getCard())).tolist() )
+
+    #some helper indices to tell what indices of A and B values to multiply
+    assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() ) #get the assignment of values of C
+    indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1 # re-arrange the assignment of C, to what it would be in factor  A
+    indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1 # re-arange the assignment of C to what it would be in  factorB
+
+
+
+    c_val=A.getVal()[indxA.flatten().tolist()] + B.getVal()[indxB.flatten().tolist()] #now that we have the index into A.val and B.val vector, multiply them to factor product
+    C.setVal ( c_val.tolist() )
+
+    return C
+
+
+def LogFactor( F ):
+    """ return a factor whose values are the  natural log of the orginal factor F  """
+    newVal= np.log ( F.getVal() ).tolist()
+    F.setVal (newVal)
+    return F
