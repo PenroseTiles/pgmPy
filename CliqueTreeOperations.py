@@ -213,15 +213,29 @@ def CliqueTreeCalibrate( P, isMax=False):
     """ this function performs sum-product or max-product algorithm for clique tree calibration.
         P is the CliqueTree object. isMax is a boolean flag that when set to True performs Max-Product
         instead of the default Sum-Product. The function returns a calibrated clique tree in which the
-        values of the factors is set to final calibrated potentials. """
+        values of the factors is set to final calibrated potentials.
+
+        Once a tree is calibrated, in each clique (node) contains the marginal probability over the variables in
+        its scope. We can compute the marginal probability of a variable X by choosing a clique that contains the
+        variable of interest, and summing out non-query variables in the clique. See page 357 in Koller and Friedman
+
+        B_i(C_i)= sum_{X-C_i} P_phi(X)
+
+        The main advantage of clique tree calibration is that it facilitates the computation of posterior
+        probabliity of all variables in the graphical model with an efficient number of steps. See pg 358
+        of Koller and Friedman
+
+        """
     np.set_printoptions(suppress=True)
-
-    if isMax == True:
-        pass
-
     ctree_edges=P.getEdges()
-    
+
     ctree_cliqueList=P.getNodeList()
+
+    """ if max-sum, we work in log space """
+    if isMax == True:
+        ctree_cliqueList= [ LogFactor (factor) for factor in ctree_cliqueList ]
+
+    
     
     N=P.getNodeCount() #Ni is the total number of nodes (cliques) in cTree
 
@@ -251,7 +265,7 @@ def CliqueTreeCalibrate( P, isMax=False):
             marginalize=np.setdiff1d( ctree_cliqueList[row].getVar(),  ctree_cliqueList[leafnode].getVar() ).tolist()
             sepset=np.intersect1d( ctree_cliqueList[row].getVar(), ctree_cliqueList[leafnode].getVar() ).tolist()
 
-            """ if isMax, this is sumproduct, so we do factor marginalization """
+            """ if isMax is false, this is sumproduct, so we do factor marginalization """
             if isMax == 0:
                 #MESSAGES(row,leafnode)=FactorMarginalization(P.cliqueList(row),marginalize);
                 MESSAGES[row,leafnode]=FactorMarginalization(ctree_cliqueList[row], marginalize )
@@ -259,7 +273,10 @@ def CliqueTreeCalibrate( P, isMax=False):
                     newVal=MESSAGES[row,leafnode].getVal() / np.sum( MESSAGES[row,leafnode].getVal() )
                     MESSAGES[row,leafnode].setVal(newVal)
             else:
-                pass
+                """ if isMax is true, this is max-marginalization
+                    don't normalize the value just yet"""
+                MESSAGES[row,leafnode]=FactorMaxMarginalization( ctree_cliqueList[row], marginalize  )
+
 
     
     """ now that the leaf messages are initialized, we begin with the rest of the clique tree
@@ -312,7 +329,13 @@ def CliqueTreeCalibrate( P, isMax=False):
             
             MESSAGES[i,j] = CliqueMarginal
         else:
-           pass
+            if len(Nbsfactors) == 1:
+                Nbssum=Nbsfactors[0]
+            else:
+                Nbssum=reduce ( lambda x,y: FactorSum(x,y), Nbsfactors  )
+            CliqueNbsSum=FactorSum( Nbssum, ctree_cliqueList[i] )
+            CliqueMarginal=FactorMaxMarginalization( CliqueNbsSum, marginalize )
+            MESSAGES[i,j] = CliqueMarginal
         #print
 
 
@@ -335,8 +358,12 @@ def CliqueTreeCalibrate( P, isMax=False):
             #pdb.set_trace()
             ctree_cliqueList[i]=CliqueNbsProduct
         else:
-            pass
-
+            if len(Nbsfactors) == 1:
+                Nbssum=Nbsfactors[0]
+            else:
+                Nbssum=reduce ( lambda x,y: FactorSum(x,y), Nbsfactors  )
+            CliqueNbsSum=FactorSum(Nbssum, ctree_cliqueList[i])
+            ctree_cliqueList[i]=CliqueNbsSum
     
     P.setNodeList( ctree_cliqueList )
     np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
@@ -373,12 +400,15 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
         Bayesian network. If isMax is 1 it runs MAP inference ( *still need to
         do this *) otherwise it runs exact inference using Sum/Product algorithm.
         The ith element of the returned list represents the ith variable in the
-        network and its marginal prob of the variable """
+        network and its marginal prob of the variable
+
+        Note, we implicitly create, prune, initialize, and calibrate a clique tree
+        constructed from the factor list F  """
 
     MARGINALS=[]
 
     P = CreatePrunedInitCtree(F)
-    P = CliqueTreeCalibrate(P)
+    P = CliqueTreeCalibrate(P,isMax)
     cliqueList=P.getNodeList()
     
     """ get the list of unique variables """
@@ -388,7 +418,7 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
     for i in range ( len(V ) ):
         for j in range ( len(cliqueList ) ):
             if V[i] in cliqueList[j].getVar():
-                marginalize=np.setdiff1d ( cliqueList[j].getVar(), V[i]  )
+                marginalize=np.setdiff1d ( cliqueList[j].getVar(), V[i]  ).tolist()
                 if not marginalize:
                     MARGINALS.append( cliqueList[j]  )
                 else:
@@ -399,10 +429,9 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
                         mfactor.setVal( newVal )
                         MARGINALS.append ( mfactor )
                     else:
-                        pass
+                        mfactor=FactorMaxMarginalization( cliqueList[j], marginalize )
+                        MARGINALS.append( mfactor )
                 break
 
-    for m in MARGINALS:
-        print m
-        print
+    
     return MARGINALS
