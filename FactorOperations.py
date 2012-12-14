@@ -510,8 +510,11 @@ def MaxProductEliminateVar(z, factorList):
     variable z. """
     return unusedFactors + [ tauFactor ], psiFactor
 
-def MaxDecoding ( FI, Z ):
-    """ In order to return the most probable assignment from MaxProductVE
+def MaxDecodingBT ( FI, Z ):
+    """
+    We are back-tracing to the most probable assingments here ...
+
+    In order to return the most probable assignment from MaxProductVE
     we take in a list of intermediate factors, FI, that were generated in the process
     of MaxProductVE. Z is the same elimination ordering used as MaxProductVE.
     We traceback our steps by iterating in reverse order the elimination ordering Z.
@@ -534,6 +537,19 @@ def MaxDecoding ( FI, Z ):
             maxvalue=values[maxidx]
             print fidx.flatten()[maxidx]
         #print IndexToAssignment(np.arange( z.getCard() ), z.getCard() )
+
+def MaxDecoding ( F ):
+    """ F is a list of max marginal factors passed in. The factors have a variable scope over a single variable only
+        So no backtracing is inovlved, we just get the index of the highest number in the value array.
+        The code here is based on https://github.com/indapa/PGM/blob/master/Prog4/MaxDecoding.m """
+    ASSIGNMENTS=[]
+    for f in F:
+        values=f.getVal().tolist()
+        ASSIGNMENTS.append ( values.index( max(values) ) )
+    return ASSIGNMENTS
+    
+
+
 
 def MaxProductVE ( Z, F ):
 
@@ -633,6 +649,6 @@ def FactorSum ( A, B):
 
 def LogFactor( F ):
     """ return a factor whose values are the  natural log of the orginal factor F  """
-    newVal= np.log ( F.getVal() ).tolist()
-    F.setVal (newVal)
-    return F
+    
+    return Factor ( F.getVar().tolist(), F.getCard().tolist(), np.log ( F.getVal() ).tolist(), F.getName() )
+    
