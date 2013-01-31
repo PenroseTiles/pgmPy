@@ -14,7 +14,7 @@ def getUniqueVar( factorList):
 
 
 def isMemberBoolean (A, B):
-    """  returns an list of the same  as A containing True where the elements of A are in B and False otherwise """
+    """  returns an list of the same length as A containing True where the elements of A are in B and False otherwise """
     
     return [ x in B for x in A ]
 
@@ -199,12 +199,12 @@ def generateAlleleGenotypeMappers( numAlleles):
     return ( allelesToGenotypes, genotypesToAlleles)
 
 
-def genotypeToIndex( geno, alleles='ACGT'):
+def genotypeToIndex( geno, alleles='ACGT',ploidy=2):
     """ given a string enumerating possible alleles
         return the index of geno in enumerated list of genotypes
         by default, the enumerated list is all 10 possibel genotypes"""
 
-    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, 2) ]
+    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, ploidy) ]
     print genotypes
     
     try:
