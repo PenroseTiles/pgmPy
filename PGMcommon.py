@@ -213,13 +213,13 @@ def genotypeToIndex( geno, alleles='ACGT',ploidy=2):
         print "genotype not in list of genotypes."
     
 
-def indexToGenotype( index, alleles='ACGT' ):
+def indexToGenotype( index, alleles='ACGT', ploidy=2):
     """ return genotype at a given index position after
     enumerating all possible genotypes given string of alleles and
     assigning to a list. By default the list contains all possible 10 genotypes"""
 
     
-    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, 2) ]
+    genotypes= [ "".join(list(genotype))  for genotype in itertools.combinations_with_replacement(alleles, ploidy) ]
     
     try:
        return genotypes[index]
