@@ -16,6 +16,7 @@ class CliqueTree(object):
 
 
     def toString(self):
+        
         print 'nodes: ', self.nodeList
         print 'card: ', self.card
         print 'factorList: ', len( self.factorList)
@@ -43,15 +44,29 @@ class CliqueTree(object):
     def getNodeList(self):
         return self.nodeList
 
+    def getNodeCount(self):
+        return len(self.nodeList)
+
 
     def getEdges(self):
         return self.edges
 
     def getFactorList(self):
-        return factorList
+        return self.factorList
+
+    def getFactorCount(self):
+        return len(self.factorList)
+    
 
     def getEvidence(self):
         return self.evidence
+
+    def incorporateEvidence(self):
+        for j in range ( len(self.evidence)):
+            k=j+1
+            if self.evidence[j] > 0:
+                self.factorList=ObserveEvidence(self.factorList, np.matrix([[k, self.evidence[j] ]] ) )
+    
 
     def eliminateVar(self,Z,E,factorList):
         """ a variable elimination function
@@ -127,7 +142,7 @@ class CliqueTree(object):
 
         newFactor = Factor( [], [], [], 'newFactor')
 
-        #we multiple in all the factors that containt the variable Z
+        #we multiple in all the factors that contain the variable Z
         for i in range( len (useFactors)):
             newFactor = FactorProduct(newFactor,factorList[ useFactors[i] ])
         
