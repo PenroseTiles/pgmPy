@@ -2,7 +2,7 @@ import numpy as np
 from CliqueTree import *
 from FactorOperations import *
 import pdb
-def createCliqueTree( factorList):
+def createCliqueTree( factorList,E=[]):
     """ return a Clique Tree object given a list of factors
         it peforms VE and returns the clique tree the VE
         ordering defines. See Chapter 9 of Friedman and Koller
@@ -35,6 +35,7 @@ def createCliqueTree( factorList):
     C.setCard( cardinality )
     C.setEdges(np.zeros( (totalVars, totalVars)))
     C.setFactorList(factorList)
+    C.setEvidence(E)
     #print 'length of factorList: ', len(factorList)
     #print C.toString()
     cliquesConsidered = 0
@@ -49,7 +50,7 @@ def createCliqueTree( factorList):
                 bestClique = i+1
         cliquesConsidered+=1
     
-        edges, factorList=C.eliminateVar(bestClique, edges, factorList)
+        (edges, factorList)=C.eliminateVar(bestClique, edges, factorList)
 
     return C
 
@@ -225,6 +226,8 @@ def CliqueTreeCalibrate( P, isMax=False):
         probabliity of all variables in the graphical model with an efficient number of steps. See pg 358
         of Koller and Friedman
 
+        After calibration, each clique will contain the marginal (or max-mariginal, if isMax is set to True)
+
         """
     np.set_printoptions(suppress=True)
     ctree_edges=P.getEdges()
@@ -379,18 +382,22 @@ def CliqueTreeCalibrate( P, isMax=False):
     return P
 
 
-def CreatePrunedInitCtree(F):
+def CreatePrunedInitCtree(F,E=[]):
     """ 1. create cTree
         2. prune it
         3. compute initial potential of the tree
         4. return it"""
 
-    #cTree = createCliqueTree(F)
-    #prunedCTree=PruneTree( cTree )
-    #P=CliqueTreeInitialPotential( prunedCTree )
+    cTree = createCliqueTree(F,E)
+    prunedCTree=PruneTree( cTree )
+    prunedCTree.incorporateEvidence()
+    return CliqueTreeInitialPotential( prunedCTree )
 
     #lets obfuscate a little ...
-    return CliqueTreeInitialPotential ( PruneTree ( createCliqueTree(F) ) )
+    # First we create the clique tree
+    # Second we prune it
+    # Third we calculate initial potential
+    #return CliqueTreeInitialPotential ( PruneTree ( createCliqueTree(F,E) ) )
 
     #return P
 
@@ -407,7 +414,7 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
 
     MARGINALS=[]
 
-    P = CreatePrunedInitCtree(F)
+    P = CreatePrunedInitCtree(F,E)
     P = CliqueTreeCalibrate(P,isMax)
     cliqueList=P.getNodeList()
     
