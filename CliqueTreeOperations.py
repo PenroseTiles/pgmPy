@@ -2,6 +2,7 @@ import numpy as np
 from CliqueTree import *
 from FactorOperations import *
 import pdb
+
 def createCliqueTree( factorList,E=[]):
     """ return a Clique Tree object given a list of factors
         it peforms VE and returns the clique tree the VE
@@ -36,10 +37,11 @@ def createCliqueTree( factorList,E=[]):
     C.setEdges(np.zeros( (totalVars, totalVars)))
     C.setFactorList(factorList)
     C.setEvidence(E)
+    C.setNodeList([])
     #print 'length of factorList: ', len(factorList)
     #print C.toString()
     cliquesConsidered = 0
-
+    pdb.set_trace()
     while cliquesConsidered < len(V):
         bestClique = 0
         bestScore = sys.maxint
@@ -64,7 +66,7 @@ def PruneTree ( C ):
     (nrows,ncols)=np.shape( ctree_edges )
     totalNodes=nrows
     Cnodes=C.getNodeList()
-    #print 'Cnodes: ', Cnodes
+    print 'Cnodes: ', Cnodes
     toRemove=[]
     #print range( totalNodes )
 
@@ -99,7 +101,7 @@ def PruneTree ( C ):
 
     C.setNodeList( Cnodes )
     C.setEdges( ctree_edges )
-
+    pdb.set_trace()
     #return the pruned tree with the updated nodes and edges
     return C
 
@@ -152,7 +154,7 @@ def CliqueTreeInitialPotential( C ):
         cliqueList[i]=ComputeJointDistribution ( F )
 
     C.setNodeList(cliqueList)
-
+    pdb.set_trace()
     return C
 
 def getNextClique(P, messages):
@@ -370,6 +372,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     
     P.setNodeList( ctree_cliqueList )
     np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
+    pdb.set_trace()
     return P
     #for k in range(len(ctree_cliqueList)):
     #    print 'k: ', k
@@ -383,7 +386,7 @@ def CliqueTreeCalibrate( P, isMax=False):
 
 
 def CreatePrunedInitCtree(F,E=[]):
-    """ 1. create cTree
+    """ 1. create cTree from list of factors F and evidence E
         2. prune it
         3. compute initial potential of the tree
         4. return it"""
@@ -393,13 +396,7 @@ def CreatePrunedInitCtree(F,E=[]):
     prunedCTree.incorporateEvidence()
     return CliqueTreeInitialPotential( prunedCTree )
 
-    #lets obfuscate a little ...
-    # First we create the clique tree
-    # Second we prune it
-    # Third we calculate initial potential
-    #return CliqueTreeInitialPotential ( PruneTree ( createCliqueTree(F,E) ) )
-
-    #return P
+    
 
 def ComputeExactMarginalsBP( F, E=[], isMax=False):
     """ We take a list of Factor objects, observed Evidence E
