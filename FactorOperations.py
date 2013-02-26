@@ -3,7 +3,6 @@ from Factor import *
 import numpy as np
 from PGMcommon import *
 import sys
-import pdb
 import itertools
 
 
@@ -566,7 +565,7 @@ def MaxProductVE ( Z, F ):
        
         #intermediateMaxFactors.append ( intermediateFactor )
    
-    MaxDecoding( intermediateMaxFactors, Z )
+    MaxDecodingBT( intermediateMaxFactors, Z )
     return reduce(lambda x, y: FactorProduct(x,y), F)
 
 
@@ -638,7 +637,8 @@ def FactorSum ( A, B):
     assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() ) #get the assignment of values of C
     indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1 # re-arrange the assignment of C, to what it would be in factor  A
     indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1 # re-arange the assignment of C to what it would be in  factorB
-
+    #print 'indxA ', indxA
+    #print 'indxB ', indxB
 
 
     c_val=A.getVal()[indxA.flatten().tolist()] + B.getVal()[indxB.flatten().tolist()] #now that we have the index into A.val and B.val vector, multiply them to factor product
@@ -651,4 +651,23 @@ def LogFactor( F ):
     """ return a factor whose values are the  natural log of the orginal factor F  """
     
     return Factor ( F.getVar().tolist(), F.getCard().tolist(), np.log ( F.getVal() ).tolist(), F.getName() )
-    
+
+
+def ExpFactorNormalize ( logF ):
+        """ exponentiate a factor to probablity space from log space
+        Since moving from log space to probablity space incures a decrease in dynamic range,
+        factors should be normalized before applying the transform. One trick we use here is
+        to shift every entry by the maximum entry. For example: phi[i] = exp{logPhi[i] -c}
+        The value of c is max(logPhi). This type of transformation ensures the resulting factor
+        has a maximum entry of 1 and prevents overflow. See page 360 of Koller and Friedman text"""
+        logPhi=logF.getVal()
+        phi=np.exp(logPhi-np.max(logPhi) )
+        logF.setVal( phi )
+        return logF
+
+def ExpFactor( logF ):
+    """ similiar to above, but don't normalize  """
+    logPhi=logF.getVal()
+    phi=np.exp( logPhi )
+    logF.setVal( phi )
+    return logF
