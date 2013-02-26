@@ -225,3 +225,18 @@ def indexToGenotype( index, alleles='ACGT', ploidy=2):
        return genotypes[index]
     except IndexError:
         print "Index out of bounds, not a valid index for list of genotypes"
+
+
+
+def lognormalize(x):
+    """http://atpassos.posterous.com/normalizing-log-probabilities-with-numpy
+       'when working with probabilities it's very easy to get floating point underflows,
+       so most people use log probabilities. Probability multiplication is very easy in
+       log-space (it's just addition), but probability addition (or normalization) is harder,
+       and the linked post gives an equation to compute that. I used to implement it myself,
+       but today I learned that numpy does almost everything you need.'
+
+       x is (natural) log list/array of numbers
+       this normalizes it in probabliity space"""
+    a=np.logaddexp.reduce(x)
+    return np.exp(x-a)
