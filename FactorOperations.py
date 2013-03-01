@@ -509,9 +509,9 @@ def MaxProductEliminateVar(z, factorList):
     variable z. """
     return unusedFactors + [ tauFactor ], psiFactor
 
-def MaxDecodingBT ( FI, Z ):
-    """
-    We are back-tracing to the most probable assingments here ...
+def TracebackMAP(FI, Z):
+    """We are back-tracing to the most probable assingments here ...
+    See psuedo-code in Koller and Friedman page 557
 
     In order to return the most probable assignment from MaxProductVE
     we take in a list of intermediate factors, FI, that were generated in the process
@@ -522,20 +522,55 @@ def MaxDecodingBT ( FI, Z ):
     variables you cannot determine their maximizing value. But you can compute their 'conditional'
     maximizing value - their max value given the other variables not eliminate yet. Once
     the last variable is eliminated, we can traceback to get the maximzing value of the remaining
-    variables. Hence the reason for iterating thru the elimination ordering Z in reverse order """
+    variables. Hence the reason for iterating thru the elimination ordering Z in reverse order
+    
+    Returns a python dictionary with key: variable value: variable assignment in the MAP"""
 
+    z_i=Z[-1]
+    f_i=FI[-1]
+    Z=Z[:-1]
+    FI=FI[:-1]
+
+    #print 'z_i:', z_i
+    #print 'f_i:', f_i
+
+    values=f_i.getVal().tolist()
+    fidx= IndexToAssignment( np.arange( np.prod( f_i.getCard()  ) ), f_i.getCard() )
+    maxidx=values.index(max(values))
+    
+
+    maxed_vars={} #key variable, value: max assignment value
+
+    #print 'variable: ', z_i
+    #print 'max value: ', fidx.flatten()[maxidx]
+    maxed_vars[z_i]=int(fidx.flatten()[maxidx])
+    #print maxed_vars
+    #print
     for (z, f) in itertools.izip( reversed(Z), reversed(FI) ):
         #print z
         #print f
+        #print 'setdiff: ', np.setdiff1d( f_i.getVar(), [z]).tolist()
+        
+        variables=np.setdiff1d( f_i.getVar(), [z]).tolist()
+        evidence=[ [v, maxed_vars[v] ] for v in variables]
+        #print 'Evidence: ',evidence
+        f=ObserveEvidence( [f], np.matrix(evidence) )[0]
+        #print f
         values=f.getVal().tolist()
-
         fidx= IndexToAssignment( np.arange( np.prod( f.getCard()  ) ), f.getCard() )
-        print fidx
-        if not np.setdiff1d( f.getVar(), [z]).tolist():
-            maxidx=values.index(max(values))
-            maxvalue=values[maxidx]
-            print fidx.flatten()[maxidx]
-        #print IndexToAssignment(np.arange( z.getCard() ), z.getCard() )
+        #print fidx
+        #print max(values)
+        maxidx=values.index(max(values))
+
+        maxed_vars[z]=int(fidx.flatten()[maxidx])
+        #print 'variable: ', z
+        #print 'max value: ', fidx.flatten()[maxidx]
+        
+        #print
+    #print maxed_vars
+    return maxed_vars
+
+
 
 def MaxDecoding ( F ):
     """ F is a list of max marginal factors passed in. The factors have a variable scope over a single variable only
@@ -557,7 +592,9 @@ def MaxProductVE ( Z, F ):
         We are giving a list of variables to eliminate in Z (in the order we want to
         elimiinate them) and a list of factors F
         eliminate each one getting getting the marginal distribution of the last variable in the list
-        Z. """
+        Z.
+
+        Returns the probabliity of the MAP configuration as well as the variable assignments of the MAP configuration"""
     intermediateMaxFactors=[]
     for z in Z:
         (F, intermediateFactor)=MaxProductEliminateVar(z, F)
@@ -565,8 +602,9 @@ def MaxProductVE ( Z, F ):
        
         #intermediateMaxFactors.append ( intermediateFactor )
    
-    MaxDecodingBT( intermediateMaxFactors, Z )
-    return reduce(lambda x, y: FactorProduct(x,y), F)
+    #MaxDecodingBT( intermediateMaxFactors, Z )
+    bt_results=TracebackMAP( intermediateMaxFactors, Z )
+    return (reduce(lambda x, y: FactorProduct(x,y), F), bt_results)
 
 
 def FactorSum ( A, B):
