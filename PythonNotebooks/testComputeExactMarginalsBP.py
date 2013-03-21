@@ -17,7 +17,11 @@ for tpl in input_factors:
     (var, card, values)=tpl
     #print var, card, values
     f= Factor( var[0].tolist(), card[0].tolist(), values[0].tolist(), 'factor' )
-    #print f
+    print f
     factorList.append( f )
+    print
+M=ComputeExactMarginalsBP( factorList )
 
-ComputeExactMarginalsBP( factorList )
+#for marginal in M:
+#    print marginal
+#    print

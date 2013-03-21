@@ -42,7 +42,7 @@ class GeneticNetworkFactory(object):
             
             if self.pedlist[i].isFounder():
                 #print self.pedlist[i].getid()
-                self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,i,self.pedlist[i].getid() + " genotype ")
+                self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,i+1,self.pedlist[i].getid() + " genotype ")
                 #self.factorList[i]=GenotypeAlleleFreqFactor(self.allelefreq,self.pedlist[i].getid(),self.pedlist[i].getid())
                 #factorList(i)=genotypeGivenAlleleFreqsFactor(alleleFreqs,i);
             else:
@@ -55,11 +55,11 @@ class GeneticNetworkFactory(object):
                 parent1name=self.pedlist[parent1Index].getid()
                 parent2name=self.pedlist[parent2Index].getid()
                 name=child+" genotype |"+parent1name+","+parent2name
-                self.factorList[i]=GenotypeGivenParentsFactor(self.totalAlleles, i, parent1Index ,  parent2Index , name)
+                self.factorList[i]=GenotypeGivenParentsFactor(self.totalAlleles, i+1, parent1Index+1 ,  parent2Index+1 , name)
         
             name=self.pedlist[i].getid()+" phenotype | " + self.pedlist[i].getid() + " genotype"
 
-            self.factorList[i+totalPeople]=PhenotypeGivenGenotypeFactor(self.alphaList,i+totalPeople,i, name )
+            self.factorList[i+totalPeople]=PhenotypeGivenGenotypeFactor(self.alphaList,i+totalPeople+1,i+1, name )
 
     def getFactorList(self):
         return self.factorList

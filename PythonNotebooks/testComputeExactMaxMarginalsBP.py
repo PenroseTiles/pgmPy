@@ -13,6 +13,9 @@ mat_struct=mat_contents['MaxMarginals']
 val=mat_struct[0,0]
 input_factors = val['INPUT'][0]
 factorList=[]
+
+ALPHABET=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+
 for tpl in input_factors:
     (var, card, values)=tpl
     #print var, card, values
@@ -25,3 +28,7 @@ MARGINALS= ComputeExactMarginalsBP( factorList, [], 1 )
 for m in MARGINALS:
     print m
     print 
+
+MAPAssignment=MaxDecoding( MARGINALS )
+
+print [ALPHABET[idx] for idx in MAPAssignment]

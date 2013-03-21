@@ -2,6 +2,7 @@ from Factor import *
 from FactorOperations import *
 import numpy as np
 import networkx as nx
+import pdb
 
 class CliqueTree(object):
     'represent a Clique tree'
@@ -85,7 +86,7 @@ class CliqueTree(object):
         useFactors = []#the index of the factor that contains the variable Z
         scope = []
 
-
+        #print 'Z: ', Z
 
         
         #get a list containining the index in self.factorLlist of factors
@@ -100,12 +101,12 @@ class CliqueTree(object):
         
         # update edge map
         """ These represent the induced edges for the VE graph.
-        #once the variable Z is eliminated, its edges are removed from the graph
-        # but in the process of elimination, we create a new factor. This
-        #inroduces fill edges pg. 307 Koller and Friedman
-        Z is one based, but the indices in E are zero based, hence Z-1
-        also the variable names in scope are 1 based, so we subtract 1 when
-        updating the induced VE graph """
+         once the variable Z is eliminated, its edges are removed from the graph
+         but in the process of elimination, we create a new factor. This
+         introduces fill edges (see pg. 307 Koller and Friedman)
+         Z is one based, but the indices in E are zero based, hence Z-1
+         also the variable names in scope are 1 based, so we subtract 1 when
+         updating the induced VE graph """
 
         for i in range ( len(scope)):
             for j in range ( len(scope)):
@@ -164,7 +165,10 @@ class CliqueTree(object):
         ########################################################################
         """ the remaining code builds the edges of the clique tree """
 
-        #adda new node with the factors that contain the variable Z
+        """ add new node with the factors that contain the variable Z
+            adding a  new node represents new clique.
+            The scope of every factor generated during the variable elimination process is a clique pg. 309 Koller & Friedman """
+
         self.nodeList.append ( scope )
         
         #newC is the total number of nodes in the clique tree
@@ -177,7 +181,8 @@ class CliqueTree(object):
 
         #print 'range( newC -1) ', range( newC-1  )
         #print 'factorInds: ', self.factorInds
-
+        #print 'useFactors: ', useFactors
+        #pdb.set_trace()
         """ we update the edges of the clique tree """
         for i in range( newC -1 ):
             
@@ -185,7 +190,7 @@ class CliqueTree(object):
             #there was the off by onoe erorr - the values in factorInds
             #were one-based, need to subtract 1
             if self.factorInds [ i ] -1  in useFactors:
-            
+                
                 self.edges[ i, newC-1 ] = 1
                 self.edges [ newC-1, i ] = 1
                 self.factorInds[ i ]  = 0

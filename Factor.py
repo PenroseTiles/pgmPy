@@ -1,9 +1,16 @@
 import sys
 import numpy as np
 class Factor(object):
-    
+
+    """ Represents a factor in a PGM. A factor has variable scope, cardinality, value, and potentially a name.
+        A factor's values (which can potentially be multi-dimensional table, are represented as NumPy 1d-arrays.
+        See Chapter10 Friedman pg. 358 and Koller for more info. """
+
+
 
     def __init__(self, var=[], card=[], val=[], name= 'None'):
+        """ a factor has list of variables, each with a cardinality, and for each possible assignment to its variable(s),
+        a position in the val array."""
         self.var= np.array(var)
         self.card=np.array(card)
         self.val=np.array(val)
@@ -21,6 +28,9 @@ class Factor(object):
 
     def getVar(self):
         return self.var
+
+    def getVarCount(self):
+        return len( self.var.tolist() )
 
     def setVal(self, val):
         self.val=np.array(val)

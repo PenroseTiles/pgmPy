@@ -7,6 +7,8 @@ import scipy.io as sio
 import numpy as np
 import pprint
 import pdb
+import matplotlib.pyplot as plt
+import networkx as nx
 matfile='/Users/amit/BC_Classes/PGM/Prog4/PA4Sample.mat'
 mat_contents=sio.loadmat(matfile)
 mat_struct=mat_contents['OCRNetworkToRun']
@@ -18,18 +20,32 @@ ALPHABET=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r
 for data in val:
     
     (var, card, values)=data[0]
-    #print var, card, values
     f= Factor( var[0].tolist(), card[0].tolist(), values[0].tolist(), 'factor' )
-    #print f
     factorList.append( f )
 
+#MARGINALS= ComputeExactMarginalsBP( factorList, [], 1 )
+#MAPAssignment=MaxDecoding( MARGINALS )
+#print "".join( [ALPHABET[idx] for idx in MAPAssignment] )
 
 MARGINALS= ComputeExactMarginalsBP( factorList, [], 1 )
+for m in MARGINALS:
+    log_val= m.getVal()
+    prob_val_normalized=np.log( lognormalize( log_val ) )
+    m.setVal(prob_val_normalized)
 
-#for m in MARGINALS:
-#    print m
-#    print 
 
-MAPAssignment=MaxDecoding( MARGINALS )
-
+MAPAssignment=MaxDecoding( MARGINALS  )
 print "".join( [ALPHABET[idx] for idx in MAPAssignment] )
+
+for m in MARGINALS:
+    print np.sum( lognormalize(m.getVal() ) )
+
+
+#V=getUniqueVar(factorList)
+#print 'unique variables:'
+#print V
+
+#cTree=CreatePrunedInitCtree(factorList)
+#G=nx.from_numpy_matrix( cTree.getEdges() )
+#nx.draw_shell(G)
+#plt.show()

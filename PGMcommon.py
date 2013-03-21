@@ -5,6 +5,7 @@ from itertools import product
 import sys
 import itertools
 
+
 def getUniqueVar( factorList):
     """ given factorList which is a list of Factor objects
         return a list of unique variables appearing in the
