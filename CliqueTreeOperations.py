@@ -24,6 +24,8 @@ def createCliqueTree( factorList,E=[]):
 
     edges=np.zeros( (totalVars, totalVars))
 
+
+    """ Set up adjacency matrix: for each factor, get the list of variables in its scope and create an edge between each variable in the factor """
     for f in factorList:
         variableList=f.getVar()
         for j in range(len(variableList) ):
@@ -41,7 +43,7 @@ def createCliqueTree( factorList,E=[]):
     #print 'length of factorList: ', len(factorList)
     #print C.toString()
     cliquesConsidered = 0
-    pdb.set_trace()
+    #pdb.set_trace()
     while cliquesConsidered < len(V):
         bestClique = 0
         bestScore = sys.maxint
@@ -66,7 +68,7 @@ def PruneTree ( C ):
     (nrows,ncols)=np.shape( ctree_edges )
     totalNodes=nrows
     Cnodes=C.getNodeList()
-    print 'Cnodes: ', Cnodes
+    
     toRemove=[]
     #print range( totalNodes )
 
@@ -101,7 +103,7 @@ def PruneTree ( C ):
 
     C.setNodeList( Cnodes )
     C.setEdges( ctree_edges )
-    pdb.set_trace()
+    #pdb.set_trace()
     #return the pruned tree with the updated nodes and edges
     return C
 
@@ -121,7 +123,7 @@ def CliqueTreeObserveEvidence ( C, E ):
 
 
 def CliqueTreeInitialPotential( C ):
-    """ given a tree, calculate the initial potentials for each of the cliques
+    """ given a clique tree object C, calculate the initial potentials for each of the cliques
         the factors in the updated clique list are FActor objects"""
 
     N= C.getNodeCount()
@@ -154,7 +156,7 @@ def CliqueTreeInitialPotential( C ):
         cliqueList[i]=ComputeJointDistribution ( F )
 
     C.setNodeList(cliqueList)
-    pdb.set_trace()
+    #pdb.set_trace()
     return C
 
 def getNextClique(P, messages):
@@ -372,7 +374,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     
     P.setNodeList( ctree_cliqueList )
     np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
-    pdb.set_trace()
+    #pdb.set_trace()
     return P
     #for k in range(len(ctree_cliqueList)):
     #    print 'k: ', k
