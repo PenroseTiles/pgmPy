@@ -18,4 +18,4 @@ and had to implement various algorithms, etc.
 While I grew to like Matlab, I needed to implement the inference and represenation of PGMs in Python for a personal project of mine. So I went down the 
 rabbit hole. The code here depends on NumPy and uses Python v2.7.
 
-
+Amit Indap
