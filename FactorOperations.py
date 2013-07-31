@@ -4,6 +4,7 @@ import numpy as np
 from PGMcommon import *
 import sys
 import itertools
+import common
 
 
 def IndexToAssignment( I, D):
@@ -582,6 +583,23 @@ def MaxDecoding ( F ):
         ASSIGNMENTS.append ( values.index( max(values) ) )
     return ASSIGNMENTS
     
+def MaxDecodingNonUniq ( F ):
+    """ F is a list of max marginal factors passed in. We don't assume that there is a unique
+        max value. So we get the indices of the non-uniq max value as a tuple and add it to """
+    ASSIGNMENTS=[]
+    for f in F:
+        values=f.getVal().tolist()
+        maxvalue=max(values)
+        """ if the maxvalue is duplicated, we get the indices of where it resides in the value array """
+        if common.isMaxDuplicated(values):
+            dup_indices_list=[dup for dup in sorted(common.list_duplicates(values)) ]
+            dup_values= [ x for (x, y) in dup_indices_list ]
+            dup_indices= [ y for (x, y) in dup_indices_list ]
+            non_uniq_max_indices=tuple(dup_indices [ dup_values.index(maxvalue) ])
+            ASSIGNMENTS.append ( non_uniq_max_indices )
+        else:
+            ASSIGNMENTS.append( values.index(maxvalue))
+    return ASSIGNMENTS
 
 
 
