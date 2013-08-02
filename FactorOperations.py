@@ -5,7 +5,7 @@ from PGMcommon import *
 import sys
 import itertools
 import common
-
+import pdb
 
 def IndexToAssignment( I, D):
 
@@ -602,7 +602,24 @@ def MaxDecodingNonUniq ( F ):
     return ASSIGNMENTS
 
 
-
+def posterior_genotypes_values(factorList, ALPHABET,samplenames,bedstring,fh):
+    """ given the factorlist of posterior marginals, the genotype alphabet, samplenames,bedstring position,
+        and prettybase file handle, print to file the posterior marginals for all 10 possibel genotypes
+        for each sample. """
+    genotype_factors=factorList[0:len(samplenames)]
+    sample_factorObj_zip=zip(samplenames, genotype_factors)
+    #print bedstring
+    for sample, f in sample_factorObj_zip:
+        #print sample, ": "
+        values=f.getVal().tolist()
+        #genotype_probZip=zip(ALPHABET,values)
+        posteriors=[]
+        for posterior_val in values:
+            posteriors.append(str(posterior_val) )
+        gstring="\t".join(posteriors)
+        outstring=" ".join([bedstring, sample,gstring])
+        fh.write(outstring + "\n")
+    
 def MaxProductVE ( Z, F ):
 
     """ A wrapper function for MaxProductEliminateVar
