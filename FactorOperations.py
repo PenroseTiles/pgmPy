@@ -611,14 +611,25 @@ def posterior_genotypes_values(factorList, ALPHABET,samplenames,bedstring,fh):
     #print bedstring
     for sample, f in sample_factorObj_zip:
         #print sample, ": "
-        values=f.getVal().tolist()
+        #values=f.getVal().tolist()
+        
+        prob_val_normalized=( lognormalize( f.getVal() ) )
+        #print prob_val_normalized.tolist()
         #genotype_probZip=zip(ALPHABET,values)
         posteriors=[]
-        for posterior_val in values:
-            posteriors.append(str(posterior_val) )
+        #print prob_val_normalized.tolist()
+        for posterior_val in prob_val_normalized.tolist():
+        #for posterior_val in values:
+            posteriors.append(str(posterior_val))
+            #posteriors.append(str(round(posterior_val,5) ))
+        #print posteriors
         gstring="\t".join(posteriors)
-        outstring=" ".join([bedstring, sample,gstring])
+        #print gstring
+        outstring="\t".join([bedstring, sample,gstring])
+        
         fh.write(outstring + "\n")
+        
+
     
 def MaxProductVE ( Z, F ):
 
