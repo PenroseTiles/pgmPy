@@ -755,3 +755,88 @@ def ExpFactor( logF ):
     phi=np.exp( logPhi )
     logF.setVal( phi )
     return logF
+
+
+
+
+def FactorDiv ( A, B):
+    """ FactorProduct Computes the dividend of two factors.
+%       Similiar to Factor Product, but if we divide 0/0, return 0
+    see page 365 in Koller and Friedman for definition of FactorDivision """
+
+    #print "A: ", A
+    #print "===="
+    #print "B: ", B
+    C=Factor()
+
+   #check for empty factors
+    if len( A.getVar() ) == 0 :
+        sys.stderr.write("A factor is empty!\n")
+        return B
+    if len( B.getVar() ) == 0:
+        sys.stderr.write("B factor is empty!\n")
+        return A
+
+
+    #check of  variables that in both A and B have the same cardinality
+    #print 'A.getVar():  ', A.getVar()
+    #print 'B.getVar(): ',B.getVar()
+    #setA= set( A.getVar() )
+    #setB= set( B.getVar() )
+    #intersect=np.array( list( setA.intersection(setB)))
+    intersect=np.intersect1d( A.getVar(), B.getVar() ).tolist()
+    #print "Intersection of variables in FactorProduct ", intersect
+    #print "A var: ",  A.getVar()
+    #print "B var: ",  B.getVar()
+
+    #if the intersection of variables in the two factors
+    #is non-zero, then make sure they have the same cardinality
+    if len(intersect) > 0:
+        #iA=np.nonzero(intersect - A.getVar()==0)[0].tolist() # see this http://stackoverflow.com/a/432146, return the index of something in an array?
+        iA=getIndex( A.getVar(), intersect )
+        #print "iA: ", iA
+        #iB=np.nonzero(intersect - B.getVar()==0)[0].tolist()
+        iB = getIndex (  B.getVar(), intersect )
+        #print "iB: ", iB
+
+        # check to see if any of the comparisons in the  array resulting from  of a.getCard()[iA] == b.getCard()[iB] 
+        # are all False. If so print an error and exit
+        if len( np.where( A.getCard()[iA].all() == B.getCard()[iB].all() ==False)[0].tolist() ) > 0:
+            sys.stderr.write("dimensionality mismatch in factors!\n")
+            sys.exit(1)
+
+    #now set the variables of C to the union of variables in factors A and B
+    #print 'setA ' ,setA
+    #print 'setB ', setB
+    #print list( setA.union(setB) )
+    C.setVar( np.union1d ( A.getVar(), B.getVar() ).tolist()  )
+    #C.setVar ( list( setA.union(setB) ) )
+    mapA=isMember(A.getVar(), C.getVar() )
+    mapB=isMember(B.getVar(), C.getVar() )
+
+    
+
+    #Set the cardinality of variables in C
+    C.setCard( np.zeros( len(C.getVar())).tolist() )
+    C.getCard()[mapA]=A.getCard()
+    C.getCard()[mapB]=B.getCard()
+
+    #intitialize the values of the factor C to be zero
+    C.setVal( np.zeros(np.prod(C.getCard())).tolist() )
+
+    #some helper indices to tell what indices of A and B values to multiply
+    assignments=IndexToAssignment( np.arange(np.prod(C.getCard())), C.getCard() ) #get the assignment of values of C
+    indxA=AssignmentToIndex(  assignments[:,mapA], A.getCard())-1 # re-arrange the assignment of C, to what it would be in factor  A
+    indxB=AssignmentToIndex(  assignments[:,mapB], B.getCard())-1 # re-arange the assignment of C to what it would be in  factorB
+    
+    numerator=A.getVal()[indxA.flatten().tolist()]
+    denominator=B.getVal()[indxB.flatten().tolist()]
+    
+    #print numerator
+    #print denominator
+    #print zip(numerator, denominator)
+    val= map( lambda x: common.zerodiv_tuple(x), zip(numerator,denominator)  )
+    #print val
+    C.setVal ( val )
+    
+    return C
