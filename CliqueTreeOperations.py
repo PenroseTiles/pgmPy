@@ -233,6 +233,7 @@ def CliqueTreeCalibrate( P, isMax=False):
         After calibration, each clique will contain the marginal (or max-mariginal, if isMax is set to True)
 
         """
+    
     np.set_printoptions(suppress=True)
     ctree_edges=P.getEdges()
 
@@ -373,9 +374,11 @@ def CliqueTreeCalibrate( P, isMax=False):
             ctree_cliqueList[i]=CliqueNbsSum
     
     P.setNodeList( ctree_cliqueList )
-    np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
+    #np.savetxt( 'numpy.cTree.edges.calibrated.txt',ctree_edges,fmt='%d', delimiter='\t')
+    
     #pdb.set_trace()
-    return P
+    #return P
+    return (P, MESSAGES)
     #for k in range(len(ctree_cliqueList)):
     #    print 'k: ', k
     #    print ctree_cliqueList[k]
@@ -384,7 +387,7 @@ def CliqueTreeCalibrate( P, isMax=False):
     #    print IndexToAssignment( I, ctree_cliqueList[k].getCard()  )
     #    print "=="
 
-    return P
+    #return P
 
 
 def CreatePrunedInitCtree(F,E=[]):
@@ -414,9 +417,23 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
     MARGINALS=[]
 
     P = CreatePrunedInitCtree(F,E)
-    P = CliqueTreeCalibrate(P,isMax)
+    (P,MESSAGES) = CliqueTreeCalibrate(P,isMax)
+    #pdb.set_trace()
+    #P = CliqueTreeCalibrate(P,isMax)
     cliqueList=P.getNodeList()
     
+    fh=open('ExactMarginals.CliqueTree.log','a')
+    for i in range(len(cliqueList)):
+        out = ",".join( map(str, cliqueList[i].getVar().tolist() )) 
+        outstring= "node " + str(i) + ":\t" + out +'\n'
+        fh.write(outstring)
+    fh.write("\n")
+    #np.savetxt( 'numpy.cTree.edges.calibrated.txt',P.getEdges(),fmt='%d', delimiter='\t')
+    np.savetxt('ExactMarginals.CliqueTree.log',P.getEdges(),fmt='%d', delimiter='\t')
+    
+    
+                           
+                            
     """ get the list of unique variables """
     V=getUniqueVar(F)
     
@@ -441,3 +458,65 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
 
     
     return MARGINALS
+
+def ComputeJointDistributionFromCalibratedCliqueTree( P, MESSAGES, isMax=0):
+    """ this is a function to attempt to compute the joint distribution from
+        a calibrated clique tree (cTree). The arguments are: 
+        1. The calibrated cTree, P, which is a CliqueTree object
+        2. The sepset beliefs are is the matrix MESSAGES
+           The MESSAGES matrix is a matrix of Factor objects
+           We can get the indices of the sepset messages
+           from the edges of the clique tree. 
+        
+        This function attempts to implement equation 10.10 in Koller and Friedman
+        in section 10.2.3: A Calibrated Clique Tree as a Distribution
+        
+        P_\Phi(X) = \frac{ \prod_{i \in V_T} \Beta_i(C_i)   } { \prod_{i-j} \in E_T \mu_i,j(S_i,j)   }
+        
+        Basically A) multiply the clique beliefs 
+                  B) multiply the sepset beliefs
+                  C) divide A/B 
+        
+        
+         """
+    cliqueFactors=P.getNodeList()
+   
+    """ if this is a max-marginal calibrated clique tree the values are in log space
+        Just re-exponentiate them  """
+    if isMax==1:
+        cliqueFactors = [ ExpFactor(c) for c in cliqueFactors ]
+    
+    """ this is the numerator """
+    cliqueBeliefProducts=reduce(lambda x, y: FactorProduct(x,y), cliqueFactors)
+    
+    """ get the adjacency matrix of the clique tree """
+    adj_matrix=P.getEdges()
+    
+    """ get the nonzero indices, then compute the product of the sepset beliefs """
+    nonzero_rows=adj_matrix.nonzero()[0].tolist()
+    nonzero_cols=adj_matrix.nonzero()[1].tolist()
+
+    
+    
+    sepsetBeliefsFactors= [   MESSAGES[x,y] for (x,y) in zip(nonzero_rows, nonzero_cols) ] 
+    """ if this is a max-marginal calibrated clique tree the values are in log space
+        Just re-exponentiate them  """
+    if isMax == 1:
+        sepsetBeliefsFactors = [ ExpFactor(c) for c in sepsetBeliefsFactors ]
+    
+    
+    
+    sepsetBeliefProducts= reduce( lambda x,y: FactorProduct(x,y), sepsetBeliefsFactors)
+         
+    """ the re-parameterization of the joint (clique tree invariant)  
+        divide the clique beliefs by the sepset messages  """
+    jointDistrbution=FactorDiv(cliqueBeliefProducts, sepsetBeliefProducts)
+    return jointDistrbution
+    
+         
+         
+         
+         
+         
+         
+        
