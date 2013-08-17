@@ -109,7 +109,7 @@ def GetValueOfAssignment( F, A, Vorder = None ):
     else:
         sys.stderr.write("The order of the variables in A are assumed to be the same as the order in F var\n")
         pass
-
+    #pdb.set_trace()
     indices=np.array(indx-1).flatten().tolist()
     return np.array ( np.matrix ( F.getVal()[indices] ))
 
@@ -745,6 +745,7 @@ def ExpFactorNormalize ( logF ):
         The value of c is max(logPhi). This type of transformation ensures the resulting factor
         has a maximum entry of 1 and prevents overflow. See page 360 of Koller and Friedman text"""
         logPhi=logF.getVal()
+        #phi=lognormalize( logPhi )
         phi=np.exp(logPhi-np.max(logPhi) )
         logF.setVal( phi )
         return logF
@@ -755,6 +756,8 @@ def ExpFactor( logF ):
     phi=np.exp( logPhi )
     logF.setVal( phi )
     return logF
+
+
 
 
 
@@ -840,3 +843,47 @@ def FactorDiv ( A, B):
     C.setVal ( val )
     
     return C
+
+
+
+
+""" given a Factor object F, calculate its variable stride in value array of the factor """
+
+def variableStride( f ):
+    strides=[]
+    iF=IndexToAssignment ( np.arange(np.prod(f.getCard()) ), f.getCard() )
+    variables=f.getVar()
+    cardinalties=f.getCard()
+    for i in range(0, len(variables) ):
+        #assignment_slice=iF[:,i]
+        #var_card=cardinalties[i]
+        #print variables[i], cardinalties[i]
+        curr_stride=iF[:,i]
+        if cardinalties[i] > 1:
+            stride=np.where(curr_stride==2)
+        else:
+            stride=0
+        #print variables[i], cardinalties[i], stride[0][0]
+        strides.append( stride[0][0] )
+        #print 
+    
+    return strides
+
+
+
+
+def IndexOfAssignment( f, strides, assignment):
+    """ given a Factor object f and the strides of each of the variables of f and 
+    a list of assignments of those variables, return the position in the value array of that assignment
+    see page 358 box 10.a in Friedman and Koller text on how efficiently map a particular variable
+    assignment to the and index in the value array of a factor
+    """
+    
+    idx=0
+    
+    #cardinalities=f.getCard()
+    for (ass, stride) in zip( assignment, strides):
+        #print ass, stride
+        idx +=(ass *stride)
+
+    return idx
