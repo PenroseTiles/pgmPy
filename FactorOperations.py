@@ -847,13 +847,16 @@ def FactorDiv ( A, B):
 
 
 
-""" given a Factor object F, calculate its variable stride in value array of the factor """
+
 
 def variableStride( f ):
+    """ given a Factor object f, calculate its variable stride in value array of the factor """
     strides=[]
     iF=IndexToAssignment ( np.arange(np.prod(f.getCard()) ), f.getCard() )
     variables=f.getVar()
     cardinalties=f.getCard()
+    
+    
     for i in range(0, len(variables) ):
         #assignment_slice=iF[:,i]
         #var_card=cardinalties[i]
@@ -863,6 +866,8 @@ def variableStride( f ):
             stride=np.where(curr_stride==2)
         else:
             stride=0
+            strides.append(stride)
+            continue
         #print variables[i], cardinalties[i], stride[0][0]
         strides.append( stride[0][0] )
         #print 
@@ -887,3 +892,8 @@ def IndexOfAssignment( f, strides, assignment):
         idx +=(ass *stride)
 
     return idx
+
+
+
+
+
