@@ -1,6 +1,8 @@
 import numpy as np
 from CliqueTree import *
 from FactorOperations import *
+import matplotlib.pyplot as plt
+import networkx as nx
 import pdb
 
 def createCliqueTree( factorList,E=[]):
@@ -126,6 +128,7 @@ def CliqueTreeInitialPotential( C ):
     """ given a clique tree object C, calculate the initial potentials for each of the cliques
         the factors in the updated clique list are FActor objects"""
 
+    
     N= C.getNodeCount()
     totalFactorCount=C.getFactorCount()
 
@@ -139,11 +142,11 @@ def CliqueTreeInitialPotential( C ):
     based on the skeleton cliqueTree cTree"""
 
     factorsUsed=np.zeros( totalFactorCount, dtype=int).tolist()
-
+    #pdb.set_trace()
     for i in range(N):
         cliqueList[i].setVar( nodeList[i] )
         F=[]
-        
+        """ we add factors to the clique if they are in the variable scope of the clique """
         for j in range( len(factorList) ):
             if len( factorList[j].getVar().tolist() ) == len ( list( set.intersection ( set(cliqueList[i].getVar().tolist() ), set( factorList[j].getVar().tolist() ) ) ) ):
         
@@ -154,7 +157,7 @@ def CliqueTreeInitialPotential( C ):
         #pdb.set_trace()
         #F= [ f.getFactor() for f in F ]
         cliqueList[i]=ComputeJointDistribution ( F )
-
+        #pdb.set_trace()
     C.setNodeList(cliqueList)
     #pdb.set_trace()
     return C
@@ -403,7 +406,7 @@ def CreatePrunedInitCtree(F,E=[]):
 
     
 
-def ComputeExactMarginalsBP( F, E=[], isMax=False):
+def ComputeExactMarginalsBP( F, E=[], isMax=False, computeJoint=0):
     """ We take a list of Factor objects, observed Evidence E
         and returns marignal proabilities for the variables in the
         Bayesian network. If isMax is 1 it runs MAP inference ( *still need to
@@ -415,9 +418,19 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
         constructed from the factor list F  """
 
     MARGINALS=[]
-
+    #pdb.set_trace()
     P = CreatePrunedInitCtree(F,E)
+    #G=nx.from_numpy_matrix( P.getEdges() )
+    #nx.draw_shell(G)
+    #plt.show()
+    
+    #plt.savefig('cliqueTree.png', bbox_inches=0)
     (P,MESSAGES) = CliqueTreeCalibrate(P,isMax)
+    #pdb.set_trace()
+    if computeJoint==1:
+        jointDistribution=ComputeJointDistributionFromCalibratedCliqueTree(P, MESSAGES, isMax)
+    else:
+        jointDistribution=None
     #pdb.set_trace()
     #P = CliqueTreeCalibrate(P,isMax)
     cliqueList=P.getNodeList()
@@ -457,9 +470,10 @@ def ComputeExactMarginalsBP( F, E=[], isMax=False):
                 break
 
     
-    return MARGINALS
+    return (MARGINALS,jointDistribution)
 
 def ComputeJointDistributionFromCalibratedCliqueTree( P, MESSAGES, isMax=0):
+    
     """ this is a function to attempt to compute the joint distribution from
         a calibrated clique tree (cTree). The arguments are: 
         1. The calibrated cTree, P, which is a CliqueTree object
@@ -484,7 +498,7 @@ def ComputeJointDistributionFromCalibratedCliqueTree( P, MESSAGES, isMax=0):
     """ if this is a max-marginal calibrated clique tree the values are in log space
         Just re-exponentiate them  """
     if isMax==1:
-        cliqueFactors = [ ExpFactor(c) for c in cliqueFactors ]
+        cliqueFactors = [ ExpFactorNormalize(c) for c in cliqueFactors ]
     
     """ this is the numerator """
     cliqueBeliefProducts=reduce(lambda x, y: FactorProduct(x,y), cliqueFactors)
@@ -495,14 +509,17 @@ def ComputeJointDistributionFromCalibratedCliqueTree( P, MESSAGES, isMax=0):
     """ get the nonzero indices, then compute the product of the sepset beliefs """
     nonzero_rows=adj_matrix.nonzero()[0].tolist()
     nonzero_cols=adj_matrix.nonzero()[1].tolist()
+    
+    
 
     
     
     sepsetBeliefsFactors= [   MESSAGES[x,y] for (x,y) in zip(nonzero_rows, nonzero_cols) ] 
+    
     """ if this is a max-marginal calibrated clique tree the values are in log space
         Just re-exponentiate them  """
     if isMax == 1:
-        sepsetBeliefsFactors = [ ExpFactor(c) for c in sepsetBeliefsFactors ]
+        sepsetBeliefsFactors = [ ExpFactorNormalize(c) for c in sepsetBeliefsFactors ]
     
     
     
@@ -511,6 +528,10 @@ def ComputeJointDistributionFromCalibratedCliqueTree( P, MESSAGES, isMax=0):
     """ the re-parameterization of the joint (clique tree invariant)  
         divide the clique beliefs by the sepset messages  """
     jointDistrbution=FactorDiv(cliqueBeliefProducts, sepsetBeliefProducts)
+    
+    val=jointDistrbution.getVal()/np.sum( jointDistrbution.getVal() )
+    jointDistrbution.setVal( val )
+    
     return jointDistrbution
     
          
