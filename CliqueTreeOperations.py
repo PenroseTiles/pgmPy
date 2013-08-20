@@ -1,7 +1,7 @@
 import numpy as np
 from CliqueTree import *
 from FactorOperations import *
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import networkx as nx
 import pdb
 
