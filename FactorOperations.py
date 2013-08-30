@@ -612,8 +612,14 @@ def posterior_genotypes_values(factorList, ALPHABET,samplenames,bedstring,fh):
     for sample, f in sample_factorObj_zip:
         #print sample, ": "
         #values=f.getVal().tolist()
-        
-        prob_val_normalized=( lognormalize( f.getVal() ) )
+       
+        #prob_val_normalized=( lognormalize( f.getVal() ) )
+        prob_val_normalized=f.getVal()/np.sum(f.getVal())
+        #print sample
+        #val=f.getVal()
+        #print np.sum(val)
+        #print val/np.sum(val)
+        #pdb.set_trace()
         #print prob_val_normalized.tolist()
         #genotype_probZip=zip(ALPHABET,values)
         posteriors=[]
